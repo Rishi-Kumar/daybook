@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getTransactionsForDate, getAllDatesWithTransactions, getOpeningBalance, calcClosing } from '../db'
-import { today, toDateStr, formatDateLong, formatCurrency } from '../utils'
+import { today, toDateStr, formatDateLong, formatCurrency, generatePrintReport } from '../utils'
 import styles from './HistoryScreen.module.css'
 
 function nDaysAgo(n) {
@@ -14,6 +14,13 @@ export default function HistoryScreen() {
   const [toDate, setToDate] = useState(today())
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
+
+  function handlePrint() {
+    const html = generatePrintReport(groups, fromDate, toDate)
+    const win = window.open('', '_blank')
+    win.document.write(html)
+    win.document.close()
+  }
 
   useEffect(() => {
     async function load() {
@@ -39,8 +46,24 @@ export default function HistoryScreen() {
   return (
     <div className={styles.screen}>
       <header className={styles.header}>
-        <span className={styles.appName}>Daybook</span>
-        <span className={styles.title}>History</span>
+        <div className={styles.headerTop}>
+          <div>
+            <span className={styles.appName}>Daybook</span>
+            <span className={styles.title}>History</span>
+          </div>
+          <button
+            className={styles.printBtn}
+            onClick={handlePrint}
+            aria-label="Print report"
+            disabled={loading || groups.length === 0}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"/>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+              <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+          </button>
+        </div>
       </header>
 
       <div className={styles.rangePicker}>

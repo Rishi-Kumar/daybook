@@ -43,3 +43,122 @@ export function formatDateShort(dateStr) {
     year: 'numeric',
   })
 }
+
+// Generates a self-contained printer-friendly HTML report
+export function generatePrintReport(groups, fromDate, toDate) {
+  const fmt = (n) =>
+    new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+    }).format(n)
+
+  const generatedOn = new Date().toLocaleDateString('en-IN', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+
+  const dayRows = groups.map(({ date, transactions, opening, closing }) => {
+    const txRows = transactions
+      .map(
+        (tx) => `
+        <tr>
+          <td><span class="badge ${tx.type === 'credit' ? 'badge-cr' : 'badge-dr'}">${tx.type === 'credit' ? 'CR' : 'DR'}</span></td>
+          <td>${tx.particulars || '—'}</td>
+          <td class="amount ${tx.type === 'credit' ? 'cr' : 'dr'}">${tx.type === 'credit' ? '+' : '−'}${fmt(tx.amount)}</td>
+        </tr>`
+      )
+      .join('')
+
+    return `
+      <div class="day-section">
+        <div class="day-title">${formatDateLong(date)}</div>
+        <table>
+          <tbody>
+            <tr class="balance-row">
+              <td colspan="2">Opening Balance</td>
+              <td class="amount">${fmt(opening)}</td>
+            </tr>
+            ${txRows}
+            <tr class="balance-row closing">
+              <td colspan="2">Closing Balance</td>
+              <td class="amount">${fmt(closing)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>`
+  })
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daybook Report</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      color: #111;
+      padding: 32px 28px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .report-header { margin-bottom: 28px; border-bottom: 2px solid #111; padding-bottom: 16px; }
+    .report-title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
+    .report-meta { font-size: 13px; color: #555; margin-top: 6px; }
+    .report-meta span { margin-right: 20px; }
+    .day-section { margin-bottom: 28px; page-break-inside: avoid; }
+    .day-title {
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #333;
+      margin-bottom: 6px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    td {
+      padding: 9px 12px;
+      border: 1px solid #ddd;
+      vertical-align: middle;
+    }
+    td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .balance-row td { background: #f5f5f5; font-weight: 600; font-size: 13px; }
+    .closing td { background: #efefef; border-top: 2px solid #ccc; }
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+    .badge-cr { background: #dcfce7; color: #15803d; }
+    .badge-dr { background: #fee2e2; color: #b91c1c; }
+    .cr { color: #15803d; }
+    .dr { color: #b91c1c; }
+    .amount { font-weight: 500; }
+    @media print {
+      body { padding: 16px; }
+      .day-section { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="report-header">
+    <div class="report-title">Daybook Report</div>
+    <div class="report-meta">
+      <span>From: ${formatDateLong(fromDate)}</span>
+      <span>To: ${formatDateLong(toDate)}</span>
+      <span>Generated: ${generatedOn}</span>
+    </div>
+  </div>
+  ${groups.length === 0 ? '<p style="color:#888">No transactions in this period.</p>' : dayRows.join('')}
+</body>
+</html>`
+}
