@@ -1,4 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 export function newId() {
   return uuidv4()
@@ -42,6 +44,124 @@ export function formatDateShort(dateStr) {
     month: 'short',
     year: 'numeric',
   })
+}
+
+// Generates a PDF report blob using jsPDF + autoTable
+export function generatePdfReport(groups, fromDate, toDate) {
+  const fmt = (n) =>
+    new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+    }).format(n)
+
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const pageW = doc.internal.pageSize.getWidth()
+
+  // Title
+  doc.setFontSize(18)
+  doc.setFont('helvetica', 'bold')
+  doc.text('Daybook Report', 14, 18)
+
+  // Subtitle
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(90, 90, 90)
+  doc.text(`From: ${formatDateLong(fromDate)}   To: ${formatDateLong(toDate)}`, 14, 25)
+  doc.text(
+    `Generated: ${new Date().toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`,
+    14, 30
+  )
+
+  // Divider
+  doc.setDrawColor(180)
+  doc.line(14, 33, pageW - 14, 33)
+
+  let y = 39
+
+  for (const { date, transactions, opening, closing } of groups) {
+    // Day heading
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(60, 60, 60)
+    doc.text(formatDateLong(date).toUpperCase(), 14, y)
+    y += 2
+
+    const GREY_LIGHT = [245, 245, 245]
+    const GREY_MID = [230, 230, 230]
+    const GREEN = [21, 128, 61]
+    const RED = [185, 28, 28]
+    const BLACK = [17, 17, 17]
+
+    const bodyRows = [
+      // Opening balance
+      {
+        cells: ['Opening Balance', opening >= 0 ? fmt(opening) : '', opening < 0 ? fmt(Math.abs(opening)) : ''],
+        isBalance: true,
+        isClosing: false,
+      },
+      // Transactions
+      ...transactions.map((tx) => ({
+        cells: [
+          tx.particulars || '—',
+          tx.type === 'credit' ? fmt(tx.amount) : '',
+          tx.type === 'debit' ? fmt(tx.amount) : '',
+        ],
+        isBalance: false,
+        isClosing: false,
+        type: tx.type,
+      })),
+      // Closing balance
+      {
+        cells: ['Closing Balance', closing >= 0 ? fmt(closing) : '', closing < 0 ? fmt(Math.abs(closing)) : ''],
+        isBalance: true,
+        isClosing: true,
+      },
+    ]
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Particulars', 'Credit', 'Debit']],
+      body: bodyRows.map((r) => r.cells),
+      margin: { left: 14, right: 14 },
+      tableWidth: pageW - 28,
+      styles: { fontSize: 9, cellPadding: 3, valign: 'middle' },
+      headStyles: {
+        fillColor: [240, 240, 240],
+        textColor: [80, 80, 80],
+        fontStyle: 'bold',
+        fontSize: 8,
+      },
+      columnStyles: {
+        0: { halign: 'left' },
+        1: { halign: 'right' },
+        2: { halign: 'right' },
+      },
+      didParseCell(data) {
+        const row = bodyRows[data.row.index]
+        if (!row || data.section !== 'body') return
+        if (row.isBalance) {
+          data.cell.styles.fillColor = row.isClosing ? GREY_MID : GREY_LIGHT
+          data.cell.styles.fontStyle = 'bold'
+          data.cell.styles.textColor = BLACK
+        } else {
+          // Credit col (index 1) green, debit col (index 2) red
+          if (data.column.index === 1 && row.type === 'credit') data.cell.styles.textColor = GREEN
+          if (data.column.index === 2 && row.type === 'debit') data.cell.styles.textColor = RED
+        }
+      },
+    })
+
+    y = doc.lastAutoTable.finalY + 8
+
+    // Page break safety
+    if (y > doc.internal.pageSize.getHeight() - 20) {
+      doc.addPage()
+      y = 14
+    }
+  }
+
+  return doc.output('blob')
 }
 
 // Generates a self-contained printer-friendly HTML report
