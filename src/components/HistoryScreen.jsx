@@ -128,7 +128,7 @@ export default function HistoryScreen() {
                   </span>
                   <span className={styles.particulars}>{tx.particulars || '—'}</span>
                   <span className={`${styles.amount} ${tx.type === 'credit' ? styles.creditAmt : styles.debitAmt}`}>
-                    {tx.type === 'credit' ? '+' : '−'}{formatCurrency(tx.amount)}
+                    {formatCurrency(tx.amount)}
                   </span>
                 </li>
               ))}

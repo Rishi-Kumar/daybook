@@ -55,7 +55,7 @@ export default function TransactionList({ transactions, onDeleted, onEdit, empty
           </div>
           <div className={styles.right}>
             <span className={`${styles.amount} ${tx.type === 'credit' ? styles.creditAmt : styles.debitAmt}`}>
-              {tx.type === 'credit' ? '+' : '−'}{formatCurrency(tx.amount)}
+              {formatCurrency(tx.amount)}
             </span>
             {!readOnly && (
               <button
