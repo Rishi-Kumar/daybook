@@ -10,11 +10,11 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
   const [type, setType] = useState(isEdit ? transaction.type : 'credit')
   const [particulars, setParticulars] = useState(isEdit ? transaction.particulars : '')
   const [error, setError] = useState('')
-  const amountRef = useRef(null)
+  const particularsRef = useRef(null)
 
   useEffect(() => {
     // Small delay so the sheet animation settles before keyboard pops
-    const t = setTimeout(() => amountRef.current?.focus(), 120)
+    const t = setTimeout(() => particularsRef.current?.focus(), 120)
     return () => clearTimeout(t)
   }, [])
 
@@ -60,6 +60,32 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
           </button>
         </div>
 
+        {/* Date */}
+        <div className={styles.field}>
+          <label className={styles.label}>Date</label>
+          <input
+            className={styles.textInput}
+            type="date"
+            value={txDate}
+            max={date}
+            onChange={(e) => setTxDate(e.target.value)}
+          />
+        </div>
+
+        {/* Particulars */}
+        <div className={styles.field}>
+          <label className={styles.label}>Particulars</label>
+          <input
+            ref={particularsRef}
+            className={styles.textInput}
+            type="text"
+            placeholder="What is this for?"
+            value={particulars}
+            onChange={(e) => setParticulars(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+          />
+        </div>
+
         {/* Credit / Debit toggle */}
         <div className={styles.toggle}>
           <button
@@ -76,25 +102,12 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
           </button>
         </div>
 
-        {/* Date */}
-        <div className={styles.field}>
-          <label className={styles.label}>Date</label>
-          <input
-            className={styles.textInput}
-            type="date"
-            value={txDate}
-            max={date}
-            onChange={(e) => setTxDate(e.target.value)}
-          />
-        </div>
-
         {/* Amount */}
         <div className={styles.field}>
           <label className={styles.label}>Amount</label>
           <div className={styles.inputWrapper}>
             <span className={styles.rupee}>₹</span>
             <input
-              ref={amountRef}
               className={styles.amountInput}
               type="number"
               inputMode="decimal"
@@ -105,19 +118,6 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
             />
           </div>
           {error && <p className={styles.error}>{error}</p>}
-        </div>
-
-        {/* Particulars */}
-        <div className={styles.field}>
-          <label className={styles.label}>Particulars</label>
-          <input
-            className={styles.textInput}
-            type="text"
-            placeholder="What is this for?"
-            value={particulars}
-            onChange={(e) => setParticulars(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-          />
         </div>
 
         <button className={`${styles.saveBtn} ${type === 'credit' ? styles.saveBtnCredit : styles.saveBtnDebit}`} onClick={handleSave}>
