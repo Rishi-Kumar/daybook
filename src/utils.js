@@ -68,7 +68,8 @@ export function generatePrintReport(groups, fromDate, toDate) {
         (tx) => `
         <tr>
           <td>${tx.particulars || '—'}</td>
-          <td class="amount ${tx.type === 'credit' ? 'cr' : 'dr'}">${tx.type === 'credit' ? '+' : '−'}${fmt(tx.amount)}</td>
+          <td class="amount cr">${tx.type === 'credit' ? fmt(tx.amount) : ''}</td>
+          <td class="amount dr">${tx.type === 'debit' ? fmt(tx.amount) : ''}</td>
         </tr>`
       )
       .join('')
@@ -77,15 +78,22 @@ export function generatePrintReport(groups, fromDate, toDate) {
       <div class="day-section">
         <div class="day-title">${formatDateLong(date)}</div>
         <table>
+          <thead>
+            <tr>
+              <th>Particulars</th>
+              <th class="amount">Credit</th>
+              <th class="amount">Debit</th>
+            </tr>
+          </thead>
           <tbody>
             <tr class="balance-row">
-              <td colspan="2">Opening Balance</td>
-              <td class="amount">${fmt(opening)}</td>
+              <td>Opening Balance</td>
+              <td class="amount" colspan="2">${fmt(opening)}</td>
             </tr>
             ${txRows}
             <tr class="balance-row closing">
-              <td colspan="2">Closing Balance</td>
-              <td class="amount">${fmt(closing)}</td>
+              <td>Closing Balance</td>
+              <td class="amount" colspan="2">${fmt(closing)}</td>
             </tr>
           </tbody>
         </table>
@@ -122,12 +130,14 @@ export function generatePrintReport(groups, fromDate, toDate) {
       margin-bottom: 6px;
     }
     table { width: 100%; border-collapse: collapse; }
-    td {
+    th, td {
       padding: 9px 12px;
       border: 1px solid #ddd;
       vertical-align: middle;
     }
-    td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    th { background: #f0f0f0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #555; }
+    td:last-child, th:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    td:nth-child(2), th:nth-child(2) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .balance-row td { background: #f5f5f5; font-weight: 600; font-size: 13px; }
     .closing td { background: #efefef; border-top: 2px solid #ccc; }
     .cr { color: #15803d; }
