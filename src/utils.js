@@ -143,13 +143,31 @@ export function generatePrintReport(groups, fromDate, toDate) {
     .cr { color: #15803d; }
     .dr { color: #b91c1c; }
     .amount { font-weight: 500; }
+    .close-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 20px;
+      padding: 8px 14px;
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .close-btn:hover { background: #e5e7eb; }
     @media print {
       body { padding: 16px; }
       .day-section { page-break-inside: avoid; }
+      .close-btn { display: none; }
     }
   </style>
 </head>
 <body>
+  <button class="close-btn" onclick="window.close()">← Back</button>
   <div class="report-header">
     <div class="report-title">Daybook Report</div>
     <div class="report-meta">
