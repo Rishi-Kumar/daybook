@@ -4,6 +4,7 @@ import { newId } from '../utils'
 import styles from './AddTransaction.module.css'
 
 export default function AddTransaction({ date, onClose, onSaved }) {
+  const [txDate, setTxDate] = useState(date)
   const [amount, setAmount] = useState('')
   const [type, setType] = useState('credit')
   const [particulars, setParticulars] = useState('')
@@ -24,7 +25,7 @@ export default function AddTransaction({ date, onClose, onSaved }) {
     }
     await addTransaction({
       id: newId(),
-      date,
+      date: txDate,
       type,
       amount: num,
       particulars: particulars.trim(),
@@ -62,6 +63,18 @@ export default function AddTransaction({ date, onClose, onSaved }) {
           >
             Debit
           </button>
+        </div>
+
+        {/* Date */}
+        <div className={styles.field}>
+          <label className={styles.label}>Date</label>
+          <input
+            className={styles.textInput}
+            type="date"
+            value={txDate}
+            max={date}
+            onChange={(e) => setTxDate(e.target.value)}
+          />
         </div>
 
         {/* Amount */}
