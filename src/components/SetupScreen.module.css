@@ -1,0 +1,113 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px 24px;
+  gap: 48px;
+  padding-top: calc(var(--safe-top) + 32px);
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoIcon {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.appName {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.tagline {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+.hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: -4px;
+  line-height: 1.5;
+}
+
+.inputWrapper {
+  display: flex;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0 16px;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.inputWrapper:focus-within {
+  border-color: var(--accent);
+}
+
+.rupee {
+  font-size: 20px;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.input {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 16px 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text);
+  width: 100%;
+}
+
+.input::placeholder {
+  color: var(--border);
+}
+
+.error {
+  font-size: 13px;
+  color: var(--debit);
+}
+
+.button {
+  margin-top: 8px;
+  padding: 16px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+
+.button:active {
+  opacity: 0.85;
+}

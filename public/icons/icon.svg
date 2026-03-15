@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#1a1a2e"/>
+  <rect x="88" y="96" width="336" height="320" rx="24" fill="#7c6af7" opacity="0.15"/>
+  <rect x="88" y="96" width="336" height="320" rx="24" fill="none" stroke="#7c6af7" stroke-width="16"/>
+  <!-- Lines suggesting ledger entries -->
+  <line x1="128" y1="192" x2="384" y2="192" stroke="#7c6af7" stroke-width="12" stroke-linecap="round" opacity="0.5"/>
+  <line x1="128" y1="240" x2="320" y2="240" stroke="#34d399" stroke-width="12" stroke-linecap="round"/>
+  <line x1="128" y1="288" x2="296" y2="288" stroke="#f87171" stroke-width="12" stroke-linecap="round"/>
+  <line x1="128" y1="336" x2="352" y2="336" stroke="#7c6af7" stroke-width="12" stroke-linecap="round" opacity="0.7"/>
+  <!-- ₹ symbol -->
+  <text x="356" y="176" font-family="system-ui, sans-serif" font-weight="700" font-size="80" fill="#7c6af7">₹</text>
+</svg>
