@@ -30,92 +30,188 @@
   margin-top: 2px;
 }
 
-.list {
-  list-style: none;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  flex: 1;
-  padding: 8px 0;
-}
-
-.item {
+/* Date range picker */
+.rangePicker {
   display: flex;
   align-items: center;
-  padding: 16px 20px;
+  gap: 10px;
+  padding: 14px 20px;
+  background: var(--bg-card);
   border-bottom: 1px solid var(--border);
-  gap: 12px;
-  cursor: pointer;
+  flex-shrink: 0;
 }
 
-.item:active {
-  background: var(--bg-elevated);
-}
-
-.left {
+.dateField {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-}
-
-.date {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.txCount {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.right {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
   gap: 4px;
 }
 
-.balRow {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.balLabel {
+.dateLabel {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
   color: var(--text-muted);
-  width: 16px;
 }
 
-.balAmt {
+.dateInput {
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 10px;
+  font-size: 14px;
+  color: var(--text);
+  width: 100%;
+  color-scheme: dark;
+}
+
+.dateInput:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.dateSep {
+  width: 1px;
+  height: 36px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin-top: 16px;
+}
+
+/* Scrollable list */
+.listArea {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Day group */
+.group {
+  border-bottom: 1px solid var(--border);
+}
+
+.group:last-child {
+  border-bottom: none;
+}
+
+.dayHeader {
+  padding: 10px 20px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.dayDate {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text);
-  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  letter-spacing: 0.2px;
 }
 
-.positive {
+/* Balance rows (opening / closing) */
+.balanceRow {
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.closingRow {
+  border-top: 1px solid var(--border);
+}
+
+.balanceRowLabel {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+
+.balanceRowAmt {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.up {
   color: var(--credit);
 }
 
-.negative {
+.down {
   color: var(--debit);
 }
 
-.chevron {
-  color: var(--border);
+/* Transaction rows */
+.txList {
+  list-style: none;
+}
+
+.txItem {
+  display: flex;
+  align-items: center;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+
+.txItem:last-child {
+  border-bottom: none;
+}
+
+.badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 3px 7px;
+  border-radius: 5px;
   flex-shrink: 0;
+}
+
+.credit {
+  background: var(--credit-bg);
+  color: var(--credit);
+}
+
+.debit {
+  background: var(--debit-bg);
+  color: var(--debit);
+}
+
+.particulars {
+  flex: 1;
+  font-size: 15px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.amount {
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.creditAmt {
+  color: var(--credit);
+}
+
+.debitAmt {
+  color: var(--debit);
 }
 
 .empty {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 1;
+  padding: 60px 20px;
   color: var(--text-muted);
   font-size: 15px;
 }
