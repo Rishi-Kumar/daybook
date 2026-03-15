@@ -15,8 +15,18 @@ export default function HistoryScreen() {
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
 
-  function handlePrint() {
+  async function handlePrint() {
     const html = generatePrintReport(groups, fromDate, toDate)
+    const file = new File([html], 'daybook-report.html', { type: 'text/html' })
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: 'Daybook Report' })
+        return
+      } catch (e) {
+        if (e.name === 'AbortError') return
+      }
+    }
+    // Fallback for desktop
     const win = window.open('', '_blank')
     win.document.write(html)
     win.document.close()
