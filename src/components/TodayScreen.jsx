@@ -14,6 +14,7 @@ export default function TodayScreen() {
   const [transactions, setTransactions] = useState([])
   const [openingBalance, setOpeningBalance] = useState(0)
   const [showAdd, setShowAdd] = useState(false)
+  const [editingTx, setEditingTx] = useState(null)
 
   const load = useCallback(async () => {
     const [txs, ob] = await Promise.all([
@@ -46,6 +47,7 @@ export default function TodayScreen() {
         <TransactionList
           transactions={transactions}
           onDeleted={load}
+          onEdit={(tx) => setEditingTx(tx)}
           emptyMessage="No transactions yet"
         />
       </div>
@@ -69,6 +71,15 @@ export default function TodayScreen() {
           date={date}
           onClose={() => setShowAdd(false)}
           onSaved={() => { setShowAdd(false); load() }}
+        />
+      )}
+
+      {editingTx && (
+        <AddTransaction
+          date={date}
+          transaction={editingTx}
+          onClose={() => setEditingTx(null)}
+          onSaved={() => { setEditingTx(null); load() }}
         />
       )}
     </div>

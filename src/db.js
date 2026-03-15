@@ -41,6 +41,11 @@ export async function deleteTransaction(id) {
   return db.delete('transactions', id)
 }
 
+export async function updateTransaction(tx) {
+  const db = await getDB()
+  return db.put('transactions', tx)
+}
+
 export async function getTransactionsForDate(date) {
   const db = await getDB()
   const all = await db.getAllFromIndex('transactions', 'by_date', date)

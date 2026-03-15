@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { deleteTransaction } from '../db'
 import { formatCurrency } from '../utils'
 import styles from './TransactionList.module.css'
 
-export default function TransactionList({ transactions, onDeleted, emptyMessage, readOnly }) {
+const LONG_PRESS_MS = 500
+
+export default function TransactionList({ transactions, onDeleted, onEdit, emptyMessage, readOnly }) {
   const [deleting, setDeleting] = useState(null)
+  const longPressTimer = useRef(null)
 
   async function handleDelete(id) {
     if (deleting) return
@@ -12,6 +15,17 @@ export default function TransactionList({ transactions, onDeleted, emptyMessage,
     await deleteTransaction(id)
     onDeleted?.()
     setDeleting(null)
+  }
+
+  function startLongPress(tx) {
+    if (readOnly || !onEdit) return
+    longPressTimer.current = setTimeout(() => {
+      onEdit(tx)
+    }, LONG_PRESS_MS)
+  }
+
+  function cancelLongPress() {
+    clearTimeout(longPressTimer.current)
   }
 
   if (transactions.length === 0) {
@@ -25,7 +39,14 @@ export default function TransactionList({ transactions, onDeleted, emptyMessage,
   return (
     <ul className={styles.list}>
       {transactions.map((tx) => (
-        <li key={tx.id} className={styles.item}>
+        <li
+          key={tx.id}
+          className={styles.item}
+          onTouchStart={() => startLongPress(tx)}
+          onTouchEnd={cancelLongPress}
+          onTouchMove={cancelLongPress}
+          onContextMenu={(e) => { if (!readOnly && onEdit) { e.preventDefault(); onEdit(tx) } }}
+        >
           <div className={styles.left}>
             <span className={`${styles.badge} ${tx.type === 'credit' ? styles.credit : styles.debit}`}>
               {tx.type === 'credit' ? 'CR' : 'DR'}

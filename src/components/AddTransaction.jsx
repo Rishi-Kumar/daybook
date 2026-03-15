@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
-import { addTransaction } from '../db'
+import { addTransaction, updateTransaction } from '../db'
 import { newId } from '../utils'
 import styles from './AddTransaction.module.css'
 
-export default function AddTransaction({ date, onClose, onSaved }) {
-  const [txDate, setTxDate] = useState(date)
-  const [amount, setAmount] = useState('')
-  const [type, setType] = useState('credit')
-  const [particulars, setParticulars] = useState('')
+export default function AddTransaction({ date, transaction, onClose, onSaved }) {
+  const isEdit = Boolean(transaction)
+  const [txDate, setTxDate] = useState(isEdit ? transaction.date : date)
+  const [amount, setAmount] = useState(isEdit ? String(transaction.amount) : '')
+  const [type, setType] = useState(isEdit ? transaction.type : 'credit')
+  const [particulars, setParticulars] = useState(isEdit ? transaction.particulars : '')
   const [error, setError] = useState('')
   const amountRef = useRef(null)
 
@@ -23,14 +24,24 @@ export default function AddTransaction({ date, onClose, onSaved }) {
       setError('Enter a valid amount')
       return
     }
-    await addTransaction({
-      id: newId(),
-      date: txDate,
-      type,
-      amount: num,
-      particulars: particulars.trim(),
-      createdAt: Date.now(),
-    })
+    if (isEdit) {
+      await updateTransaction({
+        ...transaction,
+        date: txDate,
+        type,
+        amount: num,
+        particulars: particulars.trim(),
+      })
+    } else {
+      await addTransaction({
+        id: newId(),
+        date: txDate,
+        type,
+        amount: num,
+        particulars: particulars.trim(),
+        createdAt: Date.now(),
+      })
+    }
     onSaved()
   }
 
@@ -40,7 +51,7 @@ export default function AddTransaction({ date, onClose, onSaved }) {
         <div className={styles.handle} />
 
         <div className={styles.header}>
-          <h2 className={styles.title}>Add Transaction</h2>
+          <h2 className={styles.title}>{isEdit ? 'Edit Transaction' : 'Add Transaction'}</h2>
           <button className={styles.closeBtn} onClick={onClose} aria-label="Close">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -110,7 +121,7 @@ export default function AddTransaction({ date, onClose, onSaved }) {
         </div>
 
         <button className={`${styles.saveBtn} ${type === 'credit' ? styles.saveBtnCredit : styles.saveBtnDebit}`} onClick={handleSave}>
-          Save {type === 'credit' ? 'Credit' : 'Debit'}
+          {isEdit ? 'Update' : 'Save'} {type === 'credit' ? 'Credit' : 'Debit'}
         </button>
       </div>
     </div>
