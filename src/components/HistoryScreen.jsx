@@ -29,7 +29,7 @@ export default function HistoryScreen() {
           return { date, transactions, opening, closing: calcClosing(opening, transactions) }
         })
       )
-      loaded.sort((a, b) => (a.date > b.date ? -1 : 1))
+      loaded.sort((a, b) => (a.date > b.date ? 1 : -1))
       setGroups(loaded)
       setLoading(false)
     }
