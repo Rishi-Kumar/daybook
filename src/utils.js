@@ -88,12 +88,14 @@ export function generatePrintReport(groups, fromDate, toDate) {
           <tbody>
             <tr class="balance-row">
               <td>Opening Balance</td>
-              <td class="amount" colspan="2">${fmt(opening)}</td>
+              <td class="amount cr">${opening >= 0 ? fmt(opening) : ''}</td>
+              <td class="amount dr">${opening < 0 ? fmt(Math.abs(opening)) : ''}</td>
             </tr>
             ${txRows}
             <tr class="balance-row closing">
               <td>Closing Balance</td>
-              <td class="amount" colspan="2">${fmt(closing)}</td>
+              <td class="amount cr">${closing >= 0 ? fmt(closing) : ''}</td>
+              <td class="amount dr">${closing < 0 ? fmt(Math.abs(closing)) : ''}</td>
             </tr>
           </tbody>
         </table>
