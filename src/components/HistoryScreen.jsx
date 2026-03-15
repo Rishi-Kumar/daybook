@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getTransactionsForDate, getAllDatesWithTransactions, getOpeningBalance, calcClosing } from '../db'
-import { today, toDateStr, formatDateLong, formatCurrency, generatePdfReport, generatePrintReport } from '../utils'
+import { today, toDateStr, formatDateLong, formatCurrency, generatePrintReport } from '../utils'
 import styles from './HistoryScreen.module.css'
 
 function nDaysAgo(n) {
@@ -16,8 +16,8 @@ export default function HistoryScreen() {
   const [loading, setLoading] = useState(true)
 
   async function handlePrint() {
-    const blob = generatePdfReport(groups, fromDate, toDate)
-    const file = new File([blob], 'daybook-report.pdf', { type: 'application/pdf' })
+    const html = generatePrintReport(groups, fromDate, toDate)
+    const file = new File([html], 'daybook-report.html', { type: 'text/html' })
     if (navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({ files: [file], title: 'Daybook Report' })
@@ -26,13 +26,10 @@ export default function HistoryScreen() {
         if (e.name === 'AbortError') return
       }
     }
-    // Fallback for desktop: download the PDF
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'daybook-report.pdf'
-    a.click()
-    URL.revokeObjectURL(url)
+    // Fallback for desktop: open in new window
+    const win = window.open('', '_blank')
+    win.document.write(html)
+    win.document.close()
   }
 
   useEffect(() => {
