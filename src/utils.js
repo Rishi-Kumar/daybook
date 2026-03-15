@@ -17,9 +17,8 @@ export function toDateStr(date) {
 
 export function formatCurrency(amount) {
   return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
     minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount)
 }
 
@@ -48,9 +47,8 @@ export function formatDateShort(dateStr) {
 export function generatePrintReport(groups, fromDate, toDate) {
   const fmt = (n) =>
     new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
       minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(n)
 
   const generatedOn = new Date().toLocaleDateString('en-IN', {
