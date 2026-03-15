@@ -67,7 +67,6 @@ export function generatePrintReport(groups, fromDate, toDate) {
       .map(
         (tx) => `
         <tr>
-          <td><span class="badge ${tx.type === 'credit' ? 'badge-cr' : 'badge-dr'}">${tx.type === 'credit' ? 'CR' : 'DR'}</span></td>
           <td>${tx.particulars || '—'}</td>
           <td class="amount ${tx.type === 'credit' ? 'cr' : 'dr'}">${tx.type === 'credit' ? '+' : '−'}${fmt(tx.amount)}</td>
         </tr>`
@@ -131,15 +130,6 @@ export function generatePrintReport(groups, fromDate, toDate) {
     td:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .balance-row td { background: #f5f5f5; font-weight: 600; font-size: 13px; }
     .closing td { background: #efefef; border-top: 2px solid #ccc; }
-    .badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 4px;
-      letter-spacing: 0.3px;
-    }
-    .badge-cr { background: #dcfce7; color: #15803d; }
-    .badge-dr { background: #fee2e2; color: #b91c1c; }
     .cr { color: #15803d; }
     .dr { color: #b91c1c; }
     .amount { font-weight: 500; }
