@@ -51,7 +51,7 @@ export async function getTransactionsForDate(date) {
   const all = await db.getAllFromIndex('transactions', 'by_date', date)
   return all.sort((a, b) => {
     if (a.type !== b.type) return a.type === 'credit' ? -1 : 1
-    return b.createdAt - a.createdAt
+    return a.createdAt - b.createdAt
   })
 }
 
