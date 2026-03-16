@@ -31,7 +31,6 @@ export default function SetupScreen({ onDone }) {
         <label className={styles.label}>Opening Balance</label>
         <p className={styles.hint}>Enter the current balance to start tracking from today.</p>
         <div className={styles.inputWrapper}>
-          <span className={styles.rupee}>₹</span>
           <input
             className={styles.input}
             type="number"
