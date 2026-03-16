@@ -92,7 +92,7 @@ Credits first, then debits. Within each group, sorted by `createdAt` ascending (
   1. Date (date input, defaults to today; capped at today — no future dates)
   2. Particulars (text input, auto-focused on open; Enter submits)
   3. Credit / Debit toggle (pill selector)
-  4. Amount (numeric input with ₹ prefix; Enter submits)
+  4. Amount (numeric input; Enter submits)
 - Save button label reflects the type: "Save Credit" / "Save Debit" (add mode) or "Update Credit" / "Update Debit" (edit mode)
 - Validates amount > 0; shows inline error if invalid
 - Delete is handled inline in the transaction list row — the sheet itself has no Delete button
@@ -141,7 +141,7 @@ Bottom tab bar with two tabs:
 
 ## Currency & Formatting
 - All amounts in INR
-- ₹ prefix shown only in the AddTransaction amount input field; not shown anywhere else in the app or in reports
+- No currency symbol displayed anywhere (neither in-app nor in reports)
 - No `+`/`−` prefix on amounts; colour conveys direction
 - Format: Indian numbering system with 2 decimal places
   - `Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })`
