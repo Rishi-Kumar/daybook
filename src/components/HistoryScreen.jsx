@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getTransactionsForDate, getAllDatesWithTransactions, getOpeningBalancesForDates, calcClosing } from '../db'
 import { today, toDateStr, formatDateLong, formatCurrency, generatePrintReport } from '../utils'
+import EmailSheet from './EmailSheet'
 import styles from './HistoryScreen.module.css'
 
 function nDaysAgo(n) {
@@ -14,6 +15,7 @@ export default function HistoryScreen() {
   const [toDate, setToDate] = useState(today())
   const [groups, setGroups] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showEmail, setShowEmail] = useState(false)
 
   function handlePrint() {
     const html = generatePrintReport(groups, fromDate, toDate)
@@ -57,8 +59,20 @@ export default function HistoryScreen() {
             <span className={styles.appName}>Daybook</span>
             <span className={styles.title}>History</span>
           </div>
+          <div className={styles.headerBtns}>
           <button
-            className={styles.printBtn}
+            className={styles.headerBtn}
+            onClick={() => setShowEmail(true)}
+            aria-label="Email report"
+            disabled={loading || groups.length === 0}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="4" width="20" height="16" rx="2"/>
+              <polyline points="2,4 12,13 22,4"/>
+            </svg>
+          </button>
+          <button
+            className={styles.headerBtn}
             onClick={handlePrint}
             aria-label="Print report"
             disabled={loading || groups.length === 0}
@@ -69,6 +83,7 @@ export default function HistoryScreen() {
               <rect x="6" y="14" width="12" height="8"/>
             </svg>
           </button>
+          </div>
         </div>
       </header>
 
@@ -140,6 +155,15 @@ export default function HistoryScreen() {
           </div>
         ))}
       </div>
+
+      {showEmail && (
+        <EmailSheet
+          groups={groups}
+          fromDate={fromDate}
+          toDate={toDate}
+          onClose={() => setShowEmail(false)}
+        />
+      )}
     </div>
   )
 }
