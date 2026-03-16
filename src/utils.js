@@ -43,8 +43,9 @@ export function formatDateShort(dateStr) {
   })
 }
 
-// Generates a self-contained printer-friendly HTML report
-export function generatePrintReport(groups, fromDate, toDate) {
+// Generates a self-contained printer-friendly HTML report.
+// Pass { forEmail: true } to strip the interactive top bar (Back / Print buttons).
+export function generatePrintReport(groups, fromDate, toDate, { forEmail = false } = {}) {
   const fmt = formatCurrency
 
   const generatedOn = new Date().toLocaleDateString('en-IN', {
@@ -179,7 +180,7 @@ export function generatePrintReport(groups, fromDate, toDate) {
   </style>
 </head>
 <body>
-  <div class="top-bar">
+  ${forEmail ? '' : `<div class="top-bar">
     <button class="close-btn" onclick="window.close()">← Back</button>
     <button class="share-btn" onclick="window.print()" title="Print / Share as PDF">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -188,7 +189,7 @@ export function generatePrintReport(groups, fromDate, toDate) {
         <line x1="12" y1="2" x2="12" y2="15"/>
       </svg>
     </button>
-  </div>
+  </div>`}
   <div class="report-header">
     <div class="report-title">Daybook Report</div>
     <div class="report-meta">
