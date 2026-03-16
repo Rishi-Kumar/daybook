@@ -45,11 +45,7 @@ export function formatDateShort(dateStr) {
 
 // Generates a self-contained printer-friendly HTML report
 export function generatePrintReport(groups, fromDate, toDate) {
-  const fmt = (n) =>
-    new Intl.NumberFormat('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(n)
+  const fmt = formatCurrency
 
   const generatedOn = new Date().toLocaleDateString('en-IN', {
     weekday: 'short',

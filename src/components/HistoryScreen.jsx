@@ -18,12 +18,15 @@ export default function HistoryScreen() {
   function handlePrint() {
     const html = generatePrintReport(groups, fromDate, toDate)
     const win = window.open('', '_blank')
+    if (!win) return
     win.document.write(html)
     win.document.close()
+    // Delay needed on iOS Safari: document must finish parsing before print() is called
     setTimeout(() => win.print(), 100)
   }
 
   useEffect(() => {
+    let cancelled = false
     async function load() {
       setLoading(true)
       const allDates = await getAllDatesWithTransactions()
@@ -37,11 +40,13 @@ export default function HistoryScreen() {
           return { date, transactions, opening, closing: calcClosing(opening, transactions) }
         })
       )
+      if (cancelled) return
       loaded.sort((a, b) => (a.date > b.date ? 1 : -1))
       setGroups(loaded)
       setLoading(false)
     }
     load()
+    return () => { cancelled = true }
   }, [fromDate, toDate])
 
   return (
