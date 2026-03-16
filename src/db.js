@@ -62,23 +62,61 @@ export async function getAllDatesWithTransactions() {
   return dates.sort((a, b) => (a > b ? -1 : 1)) // newest first
 }
 
-// Compute opening balance for a given date
+// Compute opening balance for a given date.
+// Iterative: groups all prior transactions by date, walks forward once — O(n), 2 DB reads.
 export async function getOpeningBalance(date) {
-  const openingBalance = (await getSetting('openingBalance')) ?? 0
-
-  // Walk backwards to find the most recent prior day with data
+  const initialBalance = (await getSetting('openingBalance')) ?? 0
   const db = await getDB()
   const all = await db.getAll('transactions')
+
   const prior = all.filter((t) => t.date < date)
+  if (prior.length === 0) return initialBalance
 
-  if (prior.length === 0) return openingBalance
+  const byDate = {}
+  for (const tx of prior) {
+    ;(byDate[tx.date] ??= []).push(tx)
+  }
 
-  // Find the latest date before `date`
-  const latestPriorDate = prior.reduce((max, t) => (t.date > max ? t.date : max), prior[0].date)
-  const priorTxs = prior.filter((t) => t.date === latestPriorDate)
+  let balance = initialBalance
+  for (const d of Object.keys(byDate).sort()) {
+    balance = calcClosing(balance, byDate[d])
+  }
+  return balance
+}
 
-  const priorOpening = await getOpeningBalance(latestPriorDate)
-  return calcClosing(priorOpening, priorTxs)
+// Batch variant: compute opening balance for multiple dates in a single pass.
+// 2 DB reads total regardless of how many dates are queried.
+export async function getOpeningBalancesForDates(dates) {
+  const initialBalance = (await getSetting('openingBalance')) ?? 0
+  const db = await getDB()
+  const all = await db.getAll('transactions')
+
+  // Group all transactions by date, sorted ascending
+  const byDate = {}
+  for (const tx of all) {
+    ;(byDate[tx.date] ??= []).push(tx)
+  }
+  const allDataDates = Object.keys(byDate).sort()
+
+  // Build cumulative closing balance after each data date
+  const cumulativeAfter = []
+  let balance = initialBalance
+  for (const d of allDataDates) {
+    balance = calcClosing(balance, byDate[d])
+    cumulativeAfter.push(balance)
+  }
+
+  // For each query date, find the running balance from all dates strictly before it
+  const result = new Map()
+  for (const queryDate of dates) {
+    let lastPriorIdx = -1
+    for (let i = 0; i < allDataDates.length; i++) {
+      if (allDataDates[i] < queryDate) lastPriorIdx = i
+      else break
+    }
+    result.set(queryDate, lastPriorIdx === -1 ? initialBalance : cumulativeAfter[lastPriorIdx])
+  }
+  return result
 }
 
 export function calcClosing(opening, transactions) {
