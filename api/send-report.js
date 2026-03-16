@@ -138,7 +138,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { to, groups, fromDate, toDate } = req.body
+  // Vercel doesn't always auto-parse JSON for ESM functions — handle both cases
+  const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+  const { to, groups, fromDate, toDate } = body ?? {}
   if (!to || !groups) {
     return res.status(400).json({ error: 'Missing required fields' })
   }
