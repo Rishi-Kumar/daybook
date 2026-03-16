@@ -21,7 +21,7 @@ export default function EmailSheet({ groups, fromDate, toDate, onClose }) {
     setStatus('sending')
     setErrorMsg('')
 
-    const html = generatePrintReport(groups, fromDate, toDate)
+    const html = generatePrintReport(groups, fromDate, toDate, { forEmail: true })
 
     try {
       const res = await fetch('/api/send-report', {
