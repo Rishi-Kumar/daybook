@@ -21,7 +21,14 @@
   justify-content: space-between;
 }
 
-.printBtn {
+.headerBtns {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.headerBtn {
   background: none;
   border: none;
   padding: 6px;
@@ -32,16 +39,15 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-bottom: 2px;
 }
 
-.printBtn:disabled {
+.headerBtn:disabled {
   color: var(--text-muted);
   opacity: 0.4;
   cursor: default;
 }
 
-.printBtn:active:not(:disabled) {
+.headerBtn:active:not(:disabled) {
   opacity: 0.6;
 }
 
