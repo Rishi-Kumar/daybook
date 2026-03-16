@@ -5,12 +5,8 @@ import { formatCurrency, formatDateLong, generatePrintReport } from '../src/util
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-// Colours matching the app palette
-const ACCENT    = [124, 106, 247]  // --accent  #7c6af7
-const CR_TEXT   = [21,  128,  61]  // credit green (print-friendly, darker than app)
+const CR_TEXT   = [21,  128,  61]  // credit green (print-friendly)
 const DR_TEXT   = [185,  28,  28]  // debit red
-const CR_BG     = [220, 252, 231]  // light green bg
-const DR_BG     = [254, 226, 226]  // light red bg
 const BAL_BG    = [245, 245, 250]  // balance row bg
 const HEADER_BG = [240, 240, 248]  // table header bg
 const GRAY_TEXT = [100, 100, 120]
@@ -19,50 +15,42 @@ const DARK_TEXT = [30,  30,   50]
 function generatePDF(groups, fromDate, toDate) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const fmt = formatCurrency
-  const PW = 210  // A4 width mm
-  const ML = 14   // margin left
-  const MR = 14   // margin right
-  const CW = PW - ML - MR
+  const ML = 14
+  const MR = 14
+  const CW = 210 - ML - MR
 
-  // ── Title banner ──────────────────────────────────────────────
-  doc.setFillColor(...ACCENT)
-  doc.rect(0, 0, PW, 24, 'F')
-
-  doc.setFontSize(16)
+  // ── Header ────────────────────────────────────────────────────
+  doc.setFontSize(20)
   doc.setFont('helvetica', 'bold')
-  doc.setTextColor(255, 255, 255)
-  doc.text('DAYBOOK', ML, 10)
+  doc.setTextColor(...DARK_TEXT)
+  doc.text('Daybook Report', ML, 18)
 
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
-  doc.setTextColor(220, 215, 255)
-  doc.text('Daily Accounting Report', ML, 16)
-
-  // date range top-right
-  doc.setFontSize(8)
-  doc.setTextColor(220, 215, 255)
-  const dateRange = `${formatDateLong(fromDate)}  –  ${formatDateLong(toDate)}`
-  doc.text(dateRange, PW - MR, 10, { align: 'right' })
+  doc.setTextColor(...GRAY_TEXT)
+  const dateRange = `From: ${formatDateLong(fromDate)}   To: ${formatDateLong(toDate)}`
+  doc.text(dateRange, ML, 25)
 
   const generated = new Date().toLocaleDateString('en-IN', {
     day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
-  doc.setFontSize(7)
-  doc.text(`Generated: ${generated}`, PW - MR, 16, { align: 'right' })
+  doc.text(`Generated: ${generated}`, ML, 30)
+
+  // thin rule under header
+  doc.setDrawColor(180, 180, 200)
+  doc.setLineWidth(0.4)
+  doc.line(ML, 33, ML + CW, 33)
 
   // ── Body ──────────────────────────────────────────────────────
-  let y = 30
+  let y = 39
 
   for (const { date, transactions, opening, closing } of groups) {
-    // Day heading pill
-    doc.setFillColor(...HEADER_BG)
-    doc.roundedRect(ML, y, CW, 8, 1, 1, 'F')
-
-    doc.setFontSize(9)
+    // Day heading
+    doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
-    doc.setTextColor(...ACCENT)
-    doc.text(formatDateLong(date).toUpperCase(), ML + 3, y + 5.5)
+    doc.setTextColor(...GRAY_TEXT)
+    doc.text(formatDateLong(date).toUpperCase(), ML, y + 4)
     doc.setTextColor(...DARK_TEXT)
 
     const body = [
@@ -89,9 +77,8 @@ function generatePDF(groups, fromDate, toDate) {
     const balanceRows = new Set([0, body.length - 1])
 
     autoTable(doc, {
-      startY: y + 9,
+      startY: y + 7,
       head: [['Particulars', 'Credit', 'Debit']],
-      // strip the internal tag column before rendering
       body: body.map(([p, c, d]) => [p, c, d]),
       margin: { left: ML, right: MR },
       tableWidth: CW,
@@ -122,21 +109,11 @@ function generatePDF(groups, fromDate, toDate) {
         if (isBalance) {
           data.cell.styles.fillColor = BAL_BG
           data.cell.styles.fontStyle = 'bold'
-          // colour the value cell
           if (data.column.index === 1 && crVal) data.cell.styles.textColor = CR_TEXT
           if (data.column.index === 2 && drVal) data.cell.styles.textColor = DR_TEXT
         } else {
-          if (tag === 'credit') {
-            if (data.column.index === 1) {
-              data.cell.styles.fillColor = CR_BG
-              data.cell.styles.textColor = CR_TEXT
-            }
-          } else if (tag === 'debit') {
-            if (data.column.index === 2) {
-              data.cell.styles.fillColor = DR_BG
-              data.cell.styles.textColor = DR_TEXT
-            }
-          }
+          if (tag === 'credit' && data.column.index === 1) data.cell.styles.textColor = CR_TEXT
+          if (tag === 'debit'  && data.column.index === 2) data.cell.styles.textColor = DR_TEXT
         }
       },
     })
