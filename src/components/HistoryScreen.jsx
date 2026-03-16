@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getTransactionsForDate, getAllDatesWithTransactions, getOpeningBalance, calcClosing } from '../db'
+import { getTransactionsForDate, getAllDatesWithTransactions, getOpeningBalancesForDates, calcClosing } from '../db'
 import { today, toDateStr, formatDateLong, formatCurrency, generatePrintReport } from '../utils'
 import styles from './HistoryScreen.module.css'
 
@@ -31,15 +31,15 @@ export default function HistoryScreen() {
       setLoading(true)
       const allDates = await getAllDatesWithTransactions()
       const inRange = allDates.filter((d) => d >= fromDate && d <= toDate)
-      const loaded = await Promise.all(
-        inRange.map(async (date) => {
-          const [transactions, opening] = await Promise.all([
-            getTransactionsForDate(date),
-            getOpeningBalance(date),
-          ])
-          return { date, transactions, opening, closing: calcClosing(opening, transactions) }
-        })
-      )
+      const [allTransactions, openings] = await Promise.all([
+        Promise.all(inRange.map((date) => getTransactionsForDate(date))),
+        getOpeningBalancesForDates(inRange),
+      ])
+      const loaded = inRange.map((date, i) => {
+        const transactions = allTransactions[i]
+        const opening = openings.get(date)
+        return { date, transactions, opening, closing: calcClosing(opening, transactions) }
+      })
       if (cancelled) return
       loaded.sort((a, b) => (a.date > b.date ? 1 : -1))
       setGroups(loaded)
