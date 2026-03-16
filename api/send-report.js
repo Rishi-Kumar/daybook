@@ -59,6 +59,9 @@ function generatePDF(groups, fromDate, toDate) {
     doc.text(formatDateLong(date).toUpperCase(), ML, y + 4)
     doc.setTextColor(...DARK_TEXT)
 
+    // Each row: [particulars, creditAmt, debitAmt, tag]
+    // tag ('balance'|'credit'|'debit') is a 4th internal column used only in
+    // didParseCell for styling — it is stripped before passing to autoTable.
     const body = [
       [
         'Opening Balance',
@@ -149,13 +152,17 @@ export default async function handler(req, res) {
   const pdfBuffer = generatePDF(groups, fromDate, toDate)
   const filename  = `daybook-${fromDate}-to-${toDate}.pdf`
 
-  await transporter.sendMail({
-    from: `Daybook <${process.env.GMAIL_USER}>`,
-    to,
-    subject: 'Daybook Report',
-    html,
-    attachments: [{ filename, content: pdfBuffer }],
-  })
+  try {
+    await transporter.sendMail({
+      from: `Daybook <${process.env.GMAIL_USER}>`,
+      to,
+      subject: 'Daybook Report',
+      html,
+      attachments: [{ filename, content: pdfBuffer }],
+    })
+  } catch (err) {
+    return res.status(500).json({ error: err.message })
+  }
 
   return res.status(200).json({ ok: true })
 }
