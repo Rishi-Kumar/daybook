@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { getSetting, setSetting } from '../db'
-import { generatePrintReport } from '../utils'
 import styles from './EmailSheet.module.css'
 
 export default function EmailSheet({ groups, fromDate, toDate, onClose }) {
@@ -21,13 +20,11 @@ export default function EmailSheet({ groups, fromDate, toDate, onClose }) {
     setStatus('sending')
     setErrorMsg('')
 
-    const html = generatePrintReport(groups, fromDate, toDate, { forEmail: true })
-
     try {
       const res = await fetch('/api/send-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: addr, html, subject: 'Daybook Report' }),
+        body: JSON.stringify({ to: addr, groups, fromDate, toDate }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
