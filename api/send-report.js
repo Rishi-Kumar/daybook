@@ -1,9 +1,15 @@
-import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { formatCurrency, formatDateLong, generatePrintReport } from '../src/utils.js'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+})
 
 const CR_TEXT   = [21,  128,  61]  // credit green (print-friendly)
 const DR_TEXT   = [185,  28,  28]  // debit red
@@ -141,17 +147,13 @@ export default async function handler(req, res) {
   const pdfBuffer = generatePDF(groups, fromDate, toDate)
   const filename  = `daybook-${fromDate}-to-${toDate}.pdf`
 
-  const { data, error } = await resend.emails.send({
-    from: 'Daybook <onboarding@resend.dev>',
+  await transporter.sendMail({
+    from: `Daybook <${process.env.GMAIL_USER}>`,
     to,
     subject: 'Daybook Report',
     html,
     attachments: [{ filename, content: pdfBuffer }],
   })
 
-  if (error) {
-    return res.status(500).json({ error: error.message })
-  }
-
-  return res.status(200).json({ ok: true, id: data.id })
+  return res.status(200).json({ ok: true })
 }
