@@ -106,7 +106,6 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
         <div className={styles.field}>
           <label className={styles.label}>Amount</label>
           <div className={styles.inputWrapper}>
-            <span className={styles.rupee}>₹</span>
             <input
               className={styles.amountInput}
               type="number"
