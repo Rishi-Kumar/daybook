@@ -123,7 +123,7 @@ export default function HistoryScreen() {
               {/* Closing balance row */}
               <li className={`${styles.txItem} ${styles.balanceRow} ${styles.closingRow}`}>
                 <span className={styles.balanceRowLabel}>Closing Balance</span>
-                <span className={`${styles.balanceRowAmt} ${closing < opening ? styles.down : styles.up}`}>
+                <span className={`${styles.balanceRowAmt} ${closing < 0 ? styles.down : styles.up}`}>
                   {formatCurrency(closing)}
                 </span>
               </li>
