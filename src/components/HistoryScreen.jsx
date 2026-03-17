@@ -95,17 +95,19 @@ export default function HistoryScreen() {
           <div className={styles.empty}>No transactions in this range</div>
         )}
 
-        {!loading && groups.map(({ date, transactions, opening, closing }) => (
+        {!loading && groups.map(({ date, transactions, opening, closing }, i) => (
           <div key={date} className={styles.group}>
             <div className={styles.dayHeader}>
               <span className={styles.dayDate}>{formatDateLong(date)}</span>
             </div>
             <ul className={styles.txList}>
-              {/* Opening balance row */}
-              <li className={`${styles.txItem} ${styles.balanceRow}`}>
-                <span className={styles.balanceRowLabel}>Opening Balance</span>
-                <span className={styles.balanceRowAmt}>{formatCurrency(opening)}</span>
-              </li>
+              {/* Opening balance row — first day only */}
+              {i === 0 && (
+                <li className={`${styles.txItem} ${styles.balanceRow}`}>
+                  <span className={styles.balanceRowLabel}>Opening Balance</span>
+                  <span className={styles.balanceRowAmt}>{formatCurrency(opening)}</span>
+                </li>
+              )}
 
               {/* Transactions */}
               {transactions.map((tx) => (

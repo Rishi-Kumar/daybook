@@ -51,7 +51,7 @@ function generatePDF(groups, fromDate, toDate) {
   // ── Body ──────────────────────────────────────────────────────
   let y = 39
 
-  for (const { date, transactions, opening, closing } of groups) {
+  for (const [groupIdx, { date, transactions, opening, closing }] of groups.entries()) {
     // Day heading
     doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
@@ -63,12 +63,12 @@ function generatePDF(groups, fromDate, toDate) {
     // tag ('balance'|'credit'|'debit') is a 4th internal column used only in
     // didParseCell for styling — it is stripped before passing to autoTable.
     const body = [
-      [
+      ...(groupIdx === 0 ? [[
         'Opening Balance',
         opening >= 0 ? fmt(opening) : '',
         opening < 0  ? fmt(Math.abs(opening)) : '',
         'balance',
-      ],
+      ]] : []),
       ...transactions.map((tx) => [
         tx.particulars || '—',
         tx.type === 'credit' ? fmt(tx.amount) : '',
@@ -83,7 +83,7 @@ function generatePDF(groups, fromDate, toDate) {
       ],
     ]
 
-    const balanceRows = new Set([0, body.length - 1])
+    const balanceRows = new Set([...(groupIdx === 0 ? [0] : []), body.length - 1])
 
     autoTable(doc, {
       startY: y + 7,

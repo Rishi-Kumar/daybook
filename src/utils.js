@@ -57,7 +57,7 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
     minute: '2-digit',
   })
 
-  const dayRows = groups.map(({ date, transactions, opening, closing }) => {
+  const dayRows = groups.map(({ date, transactions, opening, closing }, i) => {
     const txRows = transactions
       .map(
         (tx) => `
@@ -81,11 +81,11 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
             </tr>
           </thead>
           <tbody>
-            <tr class="balance-row">
+            ${i === 0 ? `<tr class="balance-row">
               <td>Opening Balance</td>
               <td class="amount cr">${opening >= 0 ? fmt(opening) : ''}</td>
               <td class="amount dr">${opening < 0 ? fmt(Math.abs(opening)) : ''}</td>
-            </tr>
+            </tr>` : ''}
             ${txRows}
             <tr class="balance-row closing">
               <td>Closing Balance</td>
