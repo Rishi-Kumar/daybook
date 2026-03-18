@@ -110,9 +110,7 @@ export default function HistoryScreen() {
 
               <TransactionList
                 transactions={transactions}
-                onDeleted={load}
                 onEdit={(tx) => setEditingTx(tx)}
-                confirmDelete
               />
 
               {/* Closing balance row */}

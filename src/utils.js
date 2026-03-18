@@ -73,13 +73,6 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
       <div class="day-section">
         <div class="day-title">${formatDateLong(date)}</div>
         <table>
-          <thead>
-            <tr>
-              <th>Particulars</th>
-              <th class="amount">Credit</th>
-              <th class="amount">Debit</th>
-            </tr>
-          </thead>
           <tbody>
             ${i === 0 ? `<tr class="balance-row">
               <td>Opening Balance</td>

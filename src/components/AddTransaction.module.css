@@ -186,3 +186,62 @@
   background: var(--debit);
   color: #2e0a0a;
 }
+
+.deleteBtn {
+  padding: 14px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--debit);
+  text-align: center;
+  background: none;
+  border: 1.5px solid var(--debit);
+  opacity: 0.8;
+}
+
+.deleteBtn:active {
+  opacity: 1;
+}
+
+.deleteConfirm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--debit);
+}
+
+.deleteConfirmText {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.deleteConfirmBtns {
+  display: flex;
+  gap: 10px;
+}
+
+.deleteCancelBtn {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  color: var(--text-muted);
+  background: none;
+}
+
+.deleteConfirmBtn {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  border: none;
+  background: var(--debit);
+  color: #2e0a0a;
+}

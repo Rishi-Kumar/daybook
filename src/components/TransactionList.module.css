@@ -74,44 +74,6 @@
   color: var(--debit);
 }
 
-.deleteBtn {
-  color: var(--text-muted);
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  opacity: 0.6;
-}
-
-.deleteBtn:active {
-  opacity: 1;
-  color: var(--debit);
-}
-
-.confirmRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.cancelBtn {
-  font-size: 13px;
-  font-weight: 500;
-  padding: 5px 12px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--border);
-  color: var(--text-muted);
-  background: none;
-}
-
-.confirmBtn {
-  font-size: 13px;
-  font-weight: 600;
-  padding: 5px 12px;
-  border-radius: var(--radius-sm);
-  border: none;
-  color: #fff;
-  background: var(--debit);
-}
 
 .empty {
   display: flex;
