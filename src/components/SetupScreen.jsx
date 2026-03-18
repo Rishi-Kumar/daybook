@@ -4,7 +4,7 @@ import { newId, today } from '../utils'
 import styles from './SetupScreen.module.css'
 
 export default function SetupScreen({ onDone }) {
-  const [name, setName] = useState('Default')
+  const [name, setName] = useState('Cash')
   const [value, setValue] = useState('')
   const [error, setError] = useState('')
 
@@ -17,7 +17,7 @@ export default function SetupScreen({ onDone }) {
     }
     const ledger = {
       id: newId(),
-      name: name.trim() || 'Default',
+      name: name.trim() || 'Cash',
       openingBalance: amount,
       setupDate: today(),
       createdAt: Date.now(),
@@ -42,7 +42,7 @@ export default function SetupScreen({ onDone }) {
             className={styles.input}
             style={{ fontSize: '18px' }}
             type="text"
-            placeholder="Default"
+            placeholder="Cash"
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoFocus
