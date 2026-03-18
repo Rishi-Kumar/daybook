@@ -48,90 +48,99 @@ function generatePDF(groups, fromDate, toDate, ledgerName = '') {
   doc.setLineWidth(0.4)
   doc.line(ML, 33, ML + CW, 33)
 
-  // ── Body ──────────────────────────────────────────────────────
-  let y = 39
+  // ── Build flat body ───────────────────────────────────────────
+  // Each row: [date, particulars, creditAmt, debitAmt, tag]
+  // tag ('balance'|'credit'|'debit') is a 5th internal column used only in
+  // didParseCell for styling — stripped when passed to autoTable.
+  const body = []
+  const balanceRows = new Set()
+  const separatorRows = new Set()
 
   for (const [groupIdx, { date, transactions, opening, closing }] of groups.entries()) {
-    // Day heading
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(...GRAY_TEXT)
-    doc.text(formatDateLong(date).toUpperCase(), ML, y + 4)
-    doc.setTextColor(...DARK_TEXT)
+    const dateLabel = formatDateLong(date)
+    let dateUsed = false
+    const groupStartRow = body.length
 
-    // Each row: [particulars, creditAmt, debitAmt, tag]
-    // tag ('balance'|'credit'|'debit') is a 4th internal column used only in
-    // didParseCell for styling — it is stripped before passing to autoTable.
-    const body = [
-      ...(groupIdx === 0 ? [[
-        'Opening Balance',
+    if (groupIdx === 0) {
+      body.push([dateLabel, 'Opening Balance',
         opening >= 0 ? fmt(opening) : '',
         opening < 0  ? fmt(Math.abs(opening)) : '',
-        'balance',
-      ]] : []),
-      ...transactions.map((tx) => [
+        'balance'])
+      balanceRows.add(body.length - 1)
+      dateUsed = true
+    }
+
+    for (const tx of transactions) {
+      body.push([
+        dateUsed ? '' : dateLabel,
         tx.particulars || '—',
         tx.type === 'credit' ? fmt(tx.amount) : '',
         tx.type === 'debit'  ? fmt(tx.amount) : '',
         tx.type,
-      ]),
-      [
-        'Closing Balance',
-        closing >= 0 ? fmt(closing) : '',
-        closing < 0  ? fmt(Math.abs(closing)) : '',
-        'balance',
-      ],
-    ]
+      ])
+      dateUsed = true
+    }
 
-    const balanceRows = new Set([...(groupIdx === 0 ? [0] : []), body.length - 1])
+    body.push([
+      dateUsed ? '' : dateLabel,
+      'Closing Balance',
+      closing >= 0 ? fmt(closing) : '',
+      closing < 0  ? fmt(Math.abs(closing)) : '',
+      'balance',
+    ])
+    balanceRows.add(body.length - 1)
 
-    autoTable(doc, {
-      startY: y + 7,
-      head: [],
-      body: body.map(([p, c, d]) => [p, c, d]),
-      margin: { left: ML, right: MR },
-      tableWidth: CW,
-      styles: {
-        fontSize: 9,
-        cellPadding: { top: 3.5, bottom: 3.5, left: 4, right: 4 },
-        textColor: DARK_TEXT,
-        lineColor: [220, 220, 230],
-        lineWidth: 0.2,
-      },
-      headStyles: {
-        fillColor: HEADER_BG,
-        textColor: GRAY_TEXT,
-        fontStyle: 'bold',
-        fontSize: 8,
-        lineColor: [200, 200, 210],
-      },
-      columnStyles: {
-        0: { cellWidth: 'auto' },
-        1: { halign: 'right', cellWidth: 38, fontStyle: 'bold' },
-        2: { halign: 'right', cellWidth: 38, fontStyle: 'bold' },
-      },
-      didParseCell(data) {
-        if (data.section !== 'body') return
-        const [, crVal, drVal, tag] = body[data.row.index]
-        const isBalance = balanceRows.has(data.row.index)
-
-        if (isBalance) {
-          data.cell.styles.fillColor = BAL_BG
-          data.cell.styles.fontStyle = 'bold'
-          if (data.column.index === 1 && crVal) data.cell.styles.textColor = CR_TEXT
-          if (data.column.index === 2 && drVal) data.cell.styles.textColor = DR_TEXT
-        } else {
-          if (tag === 'credit' && data.column.index === 1) data.cell.styles.textColor = CR_TEXT
-          if (tag === 'debit'  && data.column.index === 2) data.cell.styles.textColor = DR_TEXT
-        }
-      },
-    })
-
-    y = doc.lastAutoTable.finalY + 8
-
-    // page break guard
-    if (y > 265) { doc.addPage(); y = 14 }
+    if (groupIdx > 0) separatorRows.add(groupStartRow)
   }
+
+  // ── Single unified table ───────────────────────────────────────
+  autoTable(doc, {
+    startY: 39,
+    head: [['Date', 'Particulars', 'Credit', 'Debit']],
+    body: body.map(([d, p, c, dr]) => [d, p, c, dr]),
+    margin: { left: ML, right: MR },
+    tableWidth: CW,
+    styles: {
+      fontSize: 9,
+      cellPadding: { top: 3.5, bottom: 3.5, left: 4, right: 4 },
+      textColor: DARK_TEXT,
+      lineColor: [220, 220, 230],
+      lineWidth: 0.2,
+    },
+    headStyles: {
+      fillColor: HEADER_BG,
+      textColor: GRAY_TEXT,
+      fontStyle: 'bold',
+      fontSize: 8,
+      lineColor: [200, 200, 210],
+    },
+    columnStyles: {
+      0: { cellWidth: 38, textColor: GRAY_TEXT, fontStyle: 'normal' },
+      1: { cellWidth: 'auto' },
+      2: { halign: 'right', cellWidth: 34, fontStyle: 'bold' },
+      3: { halign: 'right', cellWidth: 34, fontStyle: 'bold' },
+    },
+    didParseCell(data) {
+      if (data.section !== 'body') return
+      const [, , crVal, drVal, tag] = body[data.row.index]
+      const isBalance = balanceRows.has(data.row.index)
+      const isSeparator = separatorRows.has(data.row.index)
+
+      if (isSeparator) {
+        data.cell.styles.lineWidth = { top: 0.6, right: 0.2, bottom: 0.2, left: 0.2 }
+      }
+
+      if (isBalance) {
+        data.cell.styles.fillColor = BAL_BG
+        if (data.column.index !== 0) data.cell.styles.fontStyle = 'bold'
+        if (data.column.index === 2 && crVal) data.cell.styles.textColor = CR_TEXT
+        if (data.column.index === 3 && drVal) data.cell.styles.textColor = DR_TEXT
+      } else {
+        if (tag === 'credit' && data.column.index === 2) data.cell.styles.textColor = CR_TEXT
+        if (tag === 'debit'  && data.column.index === 3) data.cell.styles.textColor = DR_TEXT
+      }
+    },
+  })
 
   return Buffer.from(doc.output('arraybuffer'))
 }
