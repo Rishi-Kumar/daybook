@@ -4,7 +4,13 @@
 A simple daily accounting PWA for personal use on iPhone. Track a running cash/account balance day by day with credit and debit transactions. All data is stored locally — no backend, no sync. A serverless function on Vercel handles email report delivery.
 
 **Production URL:** https://daybook-lyart.vercel.app
+**Dev/Preview URL:** https://daybook-dev.vercel.app
 **Repo:** https://github.com/Rishi-Kumar/daybook.git
+
+### Branching & Deployment Workflow
+- **`dev` branch** → auto-deploys to the Dev/Preview URL above (Vercel branch alias)
+- **`main` branch** → auto-deploys to Production
+- Workflow: make changes on `dev` → test at preview URL → merge to `main` to ship to prod
 
 ---
 

@@ -45,7 +45,7 @@ export function formatDateShort(dateStr) {
 
 // Generates a self-contained printer-friendly HTML report.
 // Pass { forEmail: true } to strip the interactive top bar (Back / Print buttons).
-export function generatePrintReport(groups, fromDate, toDate, { forEmail = false } = {}) {
+export function generatePrintReport(groups, fromDate, toDate, { forEmail = false, ledgerName = '' } = {}) {
   const fmt = formatCurrency
 
   const generatedOn = new Date().toLocaleDateString('en-IN', {
@@ -186,6 +186,7 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
   <div class="report-header">
     <div class="report-title">Daybook Report</div>
     <div class="report-meta">
+      ${ledgerName ? `<span>Ledger: ${ledgerName}</span>` : ''}
       <span>From: ${formatDateLong(fromDate)}</span>
       <span>To: ${formatDateLong(toDate)}</span>
       <span>Generated: ${generatedOn}</span>
