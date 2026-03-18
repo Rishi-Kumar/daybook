@@ -57,38 +57,49 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
     minute: '2-digit',
   })
 
-  const dayRows = groups.map(({ date, transactions, opening, closing }, i) => {
-    const txRows = transactions
-      .map(
-        (tx) => `
-        <tr>
-          <td>${tx.particulars || '—'}</td>
-          <td class="amount cr">${tx.type === 'credit' ? fmt(tx.amount) : ''}</td>
-          <td class="amount dr">${tx.type === 'debit' ? fmt(tx.amount) : ''}</td>
-        </tr>`
-      )
-      .join('')
+  const tableRows = []
+  for (const [i, { date, transactions, opening, closing }] of groups.entries()) {
+    const dateLabel = formatDateLong(date)
+    let dateUsed = false
+    let groupStarted = false
 
-    return `
-      <div class="day-section">
-        <div class="day-title">${formatDateLong(date)}</div>
-        <table>
-          <tbody>
-            ${i === 0 ? `<tr class="balance-row">
-              <td>Opening Balance</td>
-              <td class="amount cr">${opening >= 0 ? fmt(opening) : ''}</td>
-              <td class="amount dr">${opening < 0 ? fmt(Math.abs(opening)) : ''}</td>
-            </tr>` : ''}
-            ${txRows}
-            <tr class="balance-row closing">
-              <td>Closing Balance</td>
-              <td class="amount cr">${closing >= 0 ? fmt(closing) : ''}</td>
-              <td class="amount dr">${closing < 0 ? fmt(Math.abs(closing)) : ''}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>`
-  })
+    const addRow = (date, particulars, cr, dr, extraClass = '') => {
+      const sepClass = !groupStarted && i > 0 ? ' day-separator' : ''
+      groupStarted = true
+      tableRows.push(`<tr class="${extraClass}${sepClass}">
+          <td class="date-col">${date}</td>
+          <td>${particulars}</td>
+          <td class="amount${cr ? ' cr' : ''}">${cr}</td>
+          <td class="amount${dr ? ' dr' : ''}">${dr}</td>
+        </tr>`)
+    }
+
+    if (i === 0) {
+      addRow(dateLabel, 'Opening Balance',
+        opening >= 0 ? fmt(opening) : '',
+        opening < 0 ? fmt(Math.abs(opening)) : '',
+        'balance-row')
+      dateUsed = true
+    }
+
+    for (const tx of transactions) {
+      addRow(
+        dateUsed ? '' : dateLabel,
+        tx.particulars || '—',
+        tx.type === 'credit' ? fmt(tx.amount) : '',
+        tx.type === 'debit' ? fmt(tx.amount) : '',
+      )
+      dateUsed = true
+    }
+
+    addRow(
+      dateUsed ? '' : dateLabel,
+      'Closing Balance',
+      closing >= 0 ? fmt(closing) : '',
+      closing < 0 ? fmt(Math.abs(closing)) : '',
+      'balance-row closing',
+    )
+  }
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -110,15 +121,6 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
     .report-title { font-size: 22px; font-weight: 700; letter-spacing: -0.3px; }
     .report-meta { font-size: 13px; color: #555; margin-top: 6px; }
     .report-meta span { margin-right: 20px; }
-    .day-section { margin-bottom: 28px; page-break-inside: avoid; }
-    .day-title {
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: #333;
-      margin-bottom: 6px;
-    }
     table { width: 100%; border-collapse: collapse; }
     th, td {
       padding: 9px 12px;
@@ -127,7 +129,9 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
     }
     th { background: #f0f0f0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #555; }
     td:last-child, th:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
-    td:nth-child(2), th:nth-child(2) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    td:nth-child(3), th:nth-child(3) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .date-col { white-space: nowrap; color: #555; font-size: 13px; }
+    .day-separator td { border-top: 2px solid #bbb !important; }
     .balance-row td { background: #f5f5f5; font-weight: 600; font-size: 13px; }
     .closing td { background: #efefef; border-top: 2px solid #ccc; }
     .cr { color: #15803d; }
@@ -167,7 +171,6 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
     .share-btn:hover { background: #e5e7eb; }
     @media print {
       body { padding: 16px; }
-      .day-section { page-break-inside: avoid; }
       .top-bar { display: none; }
     }
   </style>
@@ -192,7 +195,20 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
       <span>Generated: ${generatedOn}</span>
     </div>
   </div>
-  ${groups.length === 0 ? '<p style="color:#888">No transactions in this period.</p>' : dayRows.join('')}
+  ${groups.length === 0 ? '<p style="color:#888">No transactions in this period.</p>' : `
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Particulars</th>
+        <th>Credit</th>
+        <th>Debit</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows.join('')}
+    </tbody>
+  </table>`}
 </body>
 </html>`
 }
