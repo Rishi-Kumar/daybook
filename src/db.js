@@ -26,7 +26,7 @@ function getDB() {
         const defaultLedgerId = crypto.randomUUID()
         await tx.objectStore('ledgers').add({
           id: defaultLedgerId,
-          name: 'Default',
+          name: 'Cash',
           openingBalance,
           setupDate,
           createdAt: Date.now(),
