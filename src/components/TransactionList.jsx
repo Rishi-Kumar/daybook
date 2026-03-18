@@ -5,16 +5,26 @@ import styles from './TransactionList.module.css'
 
 const LONG_PRESS_MS = 500
 
-export default function TransactionList({ transactions, onDeleted, onEdit, emptyMessage, readOnly }) {
+export default function TransactionList({ transactions, onDeleted, onEdit, emptyMessage, readOnly, confirmDelete }) {
   const [deleting, setDeleting] = useState(null)
+  const [confirmingId, setConfirmingId] = useState(null)
   const longPressTimer = useRef(null)
 
   async function handleDelete(id) {
     if (deleting) return
     setDeleting(id)
+    setConfirmingId(null)
     await deleteTransaction(id)
     onDeleted?.()
     setDeleting(null)
+  }
+
+  function requestDelete(id) {
+    if (confirmDelete) {
+      setConfirmingId(id)
+    } else {
+      handleDelete(id)
+    }
   }
 
   function startLongPress(tx) {
@@ -54,23 +64,32 @@ export default function TransactionList({ transactions, onDeleted, onEdit, empty
             <span className={styles.particulars}>{tx.particulars || '—'}</span>
           </div>
           <div className={styles.right}>
-            <span className={`${styles.amount} ${tx.type === 'credit' ? styles.creditAmt : styles.debitAmt}`}>
-              {formatCurrency(tx.amount)}
-            </span>
-            {!readOnly && (
-              <button
-                className={styles.deleteBtn}
-                onClick={() => handleDelete(tx.id)}
-                disabled={deleting === tx.id}
-                aria-label="Delete"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6l-1 14H6L5 6" />
-                  <path d="M10 11v6M14 11v6" />
-                  <path d="M9 6V4h6v2" />
-                </svg>
-              </button>
+            {confirmingId === tx.id ? (
+              <div className={styles.confirmRow}>
+                <button className={styles.cancelBtn} onClick={() => setConfirmingId(null)}>Cancel</button>
+                <button className={styles.confirmBtn} onClick={() => handleDelete(tx.id)} disabled={deleting === tx.id}>Delete</button>
+              </div>
+            ) : (
+              <>
+                <span className={`${styles.amount} ${tx.type === 'credit' ? styles.creditAmt : styles.debitAmt}`}>
+                  {formatCurrency(tx.amount)}
+                </span>
+                {!readOnly && (
+                  <button
+                    className={styles.deleteBtn}
+                    onClick={() => requestDelete(tx.id)}
+                    disabled={deleting === tx.id}
+                    aria-label="Delete"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                      <path d="M9 6V4h6v2" />
+                    </svg>
+                  </button>
+                )}
+              </>
             )}
           </div>
         </li>

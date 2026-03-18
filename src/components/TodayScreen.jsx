@@ -49,6 +49,7 @@ export default function TodayScreen() {
           onDeleted={load}
           onEdit={(tx) => setEditingTx(tx)}
           emptyMessage="No transactions yet"
+          confirmDelete
         />
       </div>
 
