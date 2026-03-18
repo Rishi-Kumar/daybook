@@ -18,7 +18,7 @@ const HEADER_BG = [240, 240, 248]  // table header bg
 const GRAY_TEXT = [100, 100, 120]
 const DARK_TEXT = [30,  30,   50]
 
-function generatePDF(groups, fromDate, toDate) {
+function generatePDF(groups, fromDate, toDate, ledgerName = '') {
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const fmt = formatCurrency
   const ML = 14
@@ -29,7 +29,7 @@ function generatePDF(groups, fromDate, toDate) {
   doc.setFontSize(20)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...DARK_TEXT)
-  doc.text('Daybook Report', ML, 18)
+  doc.text(ledgerName ? `${ledgerName} — Daybook Report` : 'Daybook Report', ML, 18)
 
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
@@ -143,20 +143,21 @@ export default async function handler(req, res) {
 
   // Vercel doesn't always auto-parse JSON for ESM functions — handle both cases
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-  const { to, groups, fromDate, toDate } = body ?? {}
+  const { to, groups, fromDate, toDate, ledgerName } = body ?? {}
   if (!to || !groups) {
     return res.status(400).json({ error: 'Missing required fields' })
   }
 
-  const html     = generatePrintReport(groups, fromDate, toDate, { forEmail: true })
-  const pdfBuffer = generatePDF(groups, fromDate, toDate)
-  const filename  = `daybook-${fromDate}-to-${toDate}.pdf`
+  const html      = generatePrintReport(groups, fromDate, toDate, { forEmail: true, ledgerName })
+  const pdfBuffer = generatePDF(groups, fromDate, toDate, ledgerName)
+  const safeName  = ledgerName ? ledgerName.replace(/[^a-z0-9]/gi, '-').toLowerCase() : 'report'
+  const filename  = `daybook-${safeName}-${fromDate}-to-${toDate}.pdf`
 
   try {
     await transporter.sendMail({
       from: `Daybook <${process.env.GMAIL_USER}>`,
       to,
-      subject: 'Daybook Report',
+      subject: ledgerName ? `Daybook Report — ${ledgerName}` : 'Daybook Report',
       html,
       attachments: [{ filename, content: pdfBuffer }],
     })

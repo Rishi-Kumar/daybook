@@ -1,25 +1,48 @@
 import { openDB } from 'idb'
 
 const DB_NAME = 'daybook'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 function getDB() {
   return openDB(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      // Key-value store for settings
-      if (!db.objectStoreNames.contains('settings')) {
+    async upgrade(db, oldVersion, newVersion, tx) {
+      if (oldVersion < 1) {
+        // Fresh install — create all stores
         db.createObjectStore('settings')
+        const txStore = db.createObjectStore('transactions', { keyPath: 'id' })
+        txStore.createIndex('by_date', 'date')
+        txStore.createIndex('by_ledger_date', ['ledgerId', 'date'])
+        db.createObjectStore('ledgers', { keyPath: 'id' })
       }
-      // Transactions store
-      if (!db.objectStoreNames.contains('transactions')) {
-        const store = db.createObjectStore('transactions', { keyPath: 'id' })
-        store.createIndex('by_date', 'date')
+
+      if (oldVersion === 1) {
+        // Migrate v1 → v2: introduce ledgers, scope transactions by ledgerId
+        db.createObjectStore('ledgers', { keyPath: 'id' })
+        tx.objectStore('transactions').createIndex('by_ledger_date', ['ledgerId', 'date'])
+
+        const openingBalance = (await tx.objectStore('settings').get('openingBalance')) ?? 0
+        const setupDate = (await tx.objectStore('settings').get('setupDate')) ?? new Date().toISOString().slice(0, 10)
+
+        const defaultLedgerId = crypto.randomUUID()
+        await tx.objectStore('ledgers').add({
+          id: defaultLedgerId,
+          name: 'Default',
+          openingBalance,
+          setupDate,
+          createdAt: Date.now(),
+        })
+
+        const allTxs = await tx.objectStore('transactions').getAll()
+        for (const t of allTxs) {
+          await tx.objectStore('transactions').put({ ...t, ledgerId: defaultLedgerId })
+        }
       }
     },
   })
 }
 
-// Settings
+// ── Settings ──────────────────────────────────────────────────────────────────
+
 export async function getSetting(key) {
   const db = await getDB()
   return db.get('settings', key)
@@ -30,7 +53,49 @@ export async function setSetting(key, value) {
   return db.put('settings', value, key)
 }
 
-// Transactions
+// ── Ledgers ───────────────────────────────────────────────────────────────────
+
+export async function getAllLedgers() {
+  const db = await getDB()
+  const all = await db.getAll('ledgers')
+  return all.sort((a, b) => a.createdAt - b.createdAt)
+}
+
+export async function getLedger(id) {
+  const db = await getDB()
+  return db.get('ledgers', id)
+}
+
+export async function addLedger(ledger) {
+  const db = await getDB()
+  return db.add('ledgers', ledger)
+}
+
+export async function updateLedger(ledger) {
+  const db = await getDB()
+  return db.put('ledgers', ledger)
+}
+
+export async function deleteLedger(id) {
+  const db = await getDB()
+  const range = IDBKeyRange.bound([id, ''], [id, '\uffff'])
+  const txsToDelete = await db.getAllFromIndex('transactions', 'by_ledger_date', range)
+  await Promise.all(txsToDelete.map((t) => db.delete('transactions', t.id)))
+  await db.delete('ledgers', id)
+}
+
+// Returns the running balance for a ledger through all transactions (used on ledger cards)
+export async function getLedgerCurrentBalance(ledgerId) {
+  const ledger = await getLedger(ledgerId)
+  if (!ledger) return 0
+  const db = await getDB()
+  const range = IDBKeyRange.bound([ledgerId, ''], [ledgerId, '\uffff'])
+  const txs = await db.getAllFromIndex('transactions', 'by_ledger_date', range)
+  return calcClosing(ledger.openingBalance, txs)
+}
+
+// ── Transactions ──────────────────────────────────────────────────────────────
+
 export async function addTransaction(tx) {
   const db = await getDB()
   return db.add('transactions', tx)
@@ -46,28 +111,30 @@ export async function updateTransaction(tx) {
   return db.put('transactions', tx)
 }
 
-export async function getTransactionsForDate(date) {
+export async function getTransactionsForDate(date, ledgerId) {
   const db = await getDB()
-  const all = await db.getAllFromIndex('transactions', 'by_date', date)
+  const all = await db.getAllFromIndex('transactions', 'by_ledger_date', IDBKeyRange.only([ledgerId, date]))
   return all.sort((a, b) => {
     if (a.type !== b.type) return a.type === 'credit' ? -1 : 1
     return a.createdAt - b.createdAt
   })
 }
 
-export async function getAllDatesWithTransactions() {
+export async function getAllDatesWithTransactions(ledgerId) {
   const db = await getDB()
-  const all = await db.getAll('transactions')
+  const range = IDBKeyRange.bound([ledgerId, ''], [ledgerId, '\uffff'])
+  const all = await db.getAllFromIndex('transactions', 'by_ledger_date', range)
   const dates = [...new Set(all.map((t) => t.date))]
   return dates.sort((a, b) => (a > b ? -1 : 1)) // newest first
 }
 
-// Compute opening balance for a given date.
-// Iterative: groups all prior transactions by date, walks forward once — O(n), 2 DB reads.
-export async function getOpeningBalance(date) {
-  const initialBalance = (await getSetting('openingBalance')) ?? 0
+// Compute opening balance for a given date, scoped to a ledger.
+export async function getOpeningBalance(date, ledgerId) {
+  const ledger = await getLedger(ledgerId)
+  const initialBalance = ledger?.openingBalance ?? 0
   const db = await getDB()
-  const all = await db.getAll('transactions')
+  const range = IDBKeyRange.bound([ledgerId, ''], [ledgerId, '\uffff'])
+  const all = await db.getAllFromIndex('transactions', 'by_ledger_date', range)
 
   const prior = all.filter((t) => t.date < date)
   if (prior.length === 0) return initialBalance
@@ -84,21 +151,20 @@ export async function getOpeningBalance(date) {
   return balance
 }
 
-// Batch variant: compute opening balance for multiple dates in a single pass.
-// 2 DB reads total regardless of how many dates are queried.
-export async function getOpeningBalancesForDates(dates) {
-  const initialBalance = (await getSetting('openingBalance')) ?? 0
+// Batch variant: compute opening balances for multiple dates in a single pass.
+export async function getOpeningBalancesForDates(dates, ledgerId) {
+  const ledger = await getLedger(ledgerId)
+  const initialBalance = ledger?.openingBalance ?? 0
   const db = await getDB()
-  const all = await db.getAll('transactions')
+  const range = IDBKeyRange.bound([ledgerId, ''], [ledgerId, '\uffff'])
+  const all = await db.getAllFromIndex('transactions', 'by_ledger_date', range)
 
-  // Group all transactions by date, sorted ascending
   const byDate = {}
   for (const tx of all) {
     ;(byDate[tx.date] ??= []).push(tx)
   }
   const allDataDates = Object.keys(byDate).sort()
 
-  // Build cumulative closing balance after each data date
   const cumulativeAfter = []
   let balance = initialBalance
   for (const d of allDataDates) {
@@ -106,7 +172,6 @@ export async function getOpeningBalancesForDates(dates) {
     cumulativeAfter.push(balance)
   }
 
-  // For each query date, find the running balance from all dates strictly before it
   const result = new Map()
   for (const queryDate of dates) {
     let lastPriorIdx = -1

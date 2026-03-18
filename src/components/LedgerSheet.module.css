@@ -57,40 +57,8 @@
   padding: 4px;
 }
 
-.closeBtn:active {
-  opacity: 0.6;
-}
+.closeBtn:active { opacity: 0.6; }
 
-/* Toggle */
-.toggle {
-  display: flex;
-  background: var(--bg-elevated);
-  border-radius: var(--radius-sm);
-  padding: 3px;
-  gap: 3px;
-}
-
-.toggleBtn {
-  flex: 1;
-  padding: 10px;
-  border-radius: calc(var(--radius-sm) - 2px);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-muted);
-  transition: background 0.15s, color 0.15s;
-}
-
-.activeCredit {
-  background: var(--credit-bg);
-  color: var(--credit);
-}
-
-.activeDebit {
-  background: var(--debit-bg);
-  color: var(--debit);
-}
-
-/* Fields */
 .field {
   display: flex;
   flex-direction: column;
@@ -105,6 +73,18 @@
   color: var(--text-muted);
 }
 
+.textInput {
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 13px 14px;
+  font-size: 16px;
+  color: var(--text);
+  width: 100%;
+}
+
+.textInput:focus { border-color: var(--accent); }
+
 .inputWrapper {
   display: flex;
   align-items: center;
@@ -112,18 +92,9 @@
   border: 1.5px solid var(--border);
   border-radius: var(--radius-sm);
   padding: 0 14px;
-  gap: 6px;
 }
 
-.inputWrapper:focus-within {
-  border-color: var(--accent);
-}
-
-.rupee {
-  font-size: 18px;
-  color: var(--text-muted);
-  user-select: none;
-}
+.inputWrapper:focus-within { border-color: var(--accent); }
 
 .amountInput {
   flex: 1;
@@ -136,33 +107,12 @@
   width: 100%;
 }
 
-.amountInput::placeholder {
-  color: var(--border);
-}
-
-.textInput {
-  background: var(--bg-input);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 13px 14px;
-  font-size: 16px;
-  color: var(--text);
-  width: 100%;
-  color-scheme: dark;
-  appearance: auto;
-}
-
-.textInput:focus {
-  border-color: var(--accent);
-}
-
-.textInput::placeholder {
-  color: var(--text-muted);
-}
+.amountInput::placeholder { color: var(--border); }
 
 .error {
   font-size: 13px;
   color: var(--debit);
+  margin-top: -8px;
 }
 
 .saveBtn {
@@ -171,22 +121,11 @@
   font-size: 16px;
   font-weight: 700;
   text-align: center;
-  letter-spacing: 0.2px;
+  background: var(--accent);
+  color: #fff;
 }
 
-.saveBtn:active {
-  opacity: 0.85;
-}
-
-.saveBtnCredit {
-  background: var(--credit);
-  color: #0a1f17;
-}
-
-.saveBtnDebit {
-  background: var(--debit);
-  color: #2e0a0a;
-}
+.saveBtn:active { opacity: 0.85; }
 
 .deleteBtn {
   padding: 14px;
@@ -200,9 +139,7 @@
   opacity: 0.8;
 }
 
-.deleteBtn:active {
-  opacity: 1;
-}
+.deleteBtn:active { opacity: 1; }
 
 .deleteConfirm {
   display: flex;

@@ -23,12 +23,24 @@
   justify-content: space-between;
 }
 
+.headerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .appName {
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 1.2px;
   text-transform: uppercase;
   color: var(--accent);
+}
+
+.ledgerName {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .emailBtn {

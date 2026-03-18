@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getSetting, setSetting } from '../db'
 import styles from './EmailSheet.module.css'
 
-export default function EmailSheet({ groups, fromDate, toDate, onClose }) {
+export default function EmailSheet({ groups, fromDate, toDate, ledgerName, onClose }) {
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
   const [errorMsg, setErrorMsg] = useState('')
@@ -24,7 +24,7 @@ export default function EmailSheet({ groups, fromDate, toDate, onClose }) {
       const res = await fetch('/api/send-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: addr, groups, fromDate, toDate }),
+        body: JSON.stringify({ to: addr, groups, fromDate, toDate, ledgerName }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))

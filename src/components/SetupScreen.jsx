@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { setSetting } from '../db'
-import { today } from '../utils'
+import { addLedger, setSetting } from '../db'
+import { newId, today } from '../utils'
 import styles from './SetupScreen.module.css'
 
 export default function SetupScreen({ onDone }) {
+  const [name, setName] = useState('Default')
   const [value, setValue] = useState('')
   const [error, setError] = useState('')
 
@@ -14,9 +15,16 @@ export default function SetupScreen({ onDone }) {
       setError('Please enter a valid amount')
       return
     }
-    await setSetting('openingBalance', amount)
-    await setSetting('setupDate', today())
-    onDone()
+    const ledger = {
+      id: newId(),
+      name: name.trim() || 'Default',
+      openingBalance: amount,
+      setupDate: today(),
+      createdAt: Date.now(),
+    }
+    await addLedger(ledger)
+    await setSetting('activeLedgerId', ledger.id)
+    onDone(ledger.id)
   }
 
   return (
@@ -28,7 +36,20 @@ export default function SetupScreen({ onDone }) {
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        <label className={styles.label}>Opening Balance</label>
+        <label className={styles.label}>Ledger Name</label>
+        <div className={styles.inputWrapper}>
+          <input
+            className={styles.input}
+            style={{ fontSize: '18px' }}
+            type="text"
+            placeholder="Default"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoFocus
+          />
+        </div>
+
+        <label className={styles.label} style={{ marginTop: '8px' }}>Opening Balance</label>
         <p className={styles.hint}>Enter the current balance to start tracking from today.</p>
         <div className={styles.inputWrapper}>
           <input
@@ -38,7 +59,6 @@ export default function SetupScreen({ onDone }) {
             placeholder="0.00"
             value={value}
             onChange={(e) => { setValue(e.target.value); setError('') }}
-            autoFocus
           />
         </div>
         {error && <p className={styles.error}>{error}</p>}

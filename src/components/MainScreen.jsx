@@ -3,6 +3,7 @@ import {
   getTransactionsForDate,
   getAllDatesWithTransactions,
   getOpeningBalancesForDates,
+  getLedger,
   calcClosing,
 } from '../db'
 import { today, toDateStr, formatDateLong, formatCurrency } from '../utils'
@@ -17,7 +18,8 @@ function nDaysAgo(n) {
   return toDateStr(d)
 }
 
-export default function MainScreen() {
+export default function MainScreen({ ledgerId }) {
+  const [ledgerName, setLedgerName] = useState('')
   const [fromDate, setFromDate] = useState(nDaysAgo(6))
   const [toDate, setToDate] = useState(today())
   const [groups, setGroups] = useState([])
@@ -29,13 +31,20 @@ export default function MainScreen() {
   const bottomRef = useRef(null)
   const shouldScrollRef = useRef(true)
 
+  // Load ledger name when ledgerId changes
+  useEffect(() => {
+    if (!ledgerId) return
+    getLedger(ledgerId).then((l) => setLedgerName(l?.name ?? ''))
+  }, [ledgerId])
+
   const load = useCallback(async (scrollBottom = false) => {
+    if (!ledgerId) return
     setLoading(true)
-    const allDates = await getAllDatesWithTransactions()
+    const allDates = await getAllDatesWithTransactions(ledgerId)
     const inRange = allDates.filter((d) => d >= fromDate && d <= toDate)
     const [allTransactions, openings] = await Promise.all([
-      Promise.all(inRange.map((date) => getTransactionsForDate(date))),
-      getOpeningBalancesForDates(inRange),
+      Promise.all(inRange.map((date) => getTransactionsForDate(date, ledgerId))),
+      getOpeningBalancesForDates(inRange, ledgerId),
     ])
     const loaded = inRange
       .map((date, i) => {
@@ -46,12 +55,9 @@ export default function MainScreen() {
       .sort((a, b) => (a.date > b.date ? 1 : -1))
     setGroups(loaded)
     setLoading(false)
-    if (scrollBottom) {
-      shouldScrollRef.current = true
-    }
-  }, [fromDate, toDate])
+    if (scrollBottom) shouldScrollRef.current = true
+  }, [ledgerId, fromDate, toDate])
 
-  // Scroll to bottom after groups render when flagged
   useEffect(() => {
     if (shouldScrollRef.current && !loading) {
       bottomRef.current?.scrollIntoView({ behavior: 'instant' })
@@ -59,16 +65,16 @@ export default function MainScreen() {
     }
   }, [loading, groups])
 
-  // Initial load + reload on date range change — always scroll to bottom
-  useEffect(() => {
-    load(true)
-  }, [load])
+  useEffect(() => { load(true) }, [load])
 
   return (
     <div className={styles.screen}>
       <header className={styles.header}>
         <div className={styles.headerTop}>
-          <span className={styles.appName}>Daybook</span>
+          <div className={styles.headerLeft}>
+            <span className={styles.appName}>Daybook</span>
+            {ledgerName && <span className={styles.ledgerName}>{ledgerName}</span>}
+          </div>
           <button
             className={styles.emailBtn}
             onClick={() => setShowEmail(true)}
@@ -156,6 +162,7 @@ export default function MainScreen() {
       {showAdd && (
         <AddTransaction
           date={today()}
+          ledgerId={ledgerId}
           onClose={() => setShowAdd(false)}
           onSaved={() => { setShowAdd(false); load(false) }}
         />
@@ -164,6 +171,7 @@ export default function MainScreen() {
       {editingTx && (
         <AddTransaction
           date={today()}
+          ledgerId={ledgerId}
           transaction={editingTx}
           onClose={() => setEditingTx(null)}
           onSaved={() => { setEditingTx(null); load(false) }}
@@ -175,6 +183,7 @@ export default function MainScreen() {
           groups={groups}
           fromDate={fromDate}
           toDate={toDate}
+          ledgerName={ledgerName}
           onClose={() => setShowEmail(false)}
         />
       )}

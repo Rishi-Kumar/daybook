@@ -1,20 +1,22 @@
 import { useState, useRef, useEffect } from 'react'
-import { addTransaction, updateTransaction, deleteTransaction } from '../db'
+import { addTransaction, updateTransaction, deleteTransaction, getAllLedgers } from '../db'
 import { newId } from '../utils'
 import styles from './AddTransaction.module.css'
 
-export default function AddTransaction({ date, transaction, onClose, onSaved }) {
+export default function AddTransaction({ date, ledgerId, transaction, onClose, onSaved }) {
   const isEdit = Boolean(transaction)
   const [txDate, setTxDate] = useState(isEdit ? transaction.date : date)
   const [amount, setAmount] = useState(isEdit ? String(transaction.amount) : '')
   const [type, setType] = useState(isEdit ? transaction.type : 'credit')
   const [particulars, setParticulars] = useState(isEdit ? transaction.particulars : '')
+  const [txLedgerId, setTxLedgerId] = useState(isEdit ? transaction.ledgerId : ledgerId)
+  const [allLedgers, setAllLedgers] = useState([])
   const [error, setError] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const particularsRef = useRef(null)
 
   useEffect(() => {
-    // Small delay so the sheet animation settles before keyboard pops
+    getAllLedgers().then(setAllLedgers)
     const t = setTimeout(() => particularsRef.current?.focus(), 120)
     return () => clearTimeout(t)
   }, [])
@@ -28,6 +30,7 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
     if (isEdit) {
       await updateTransaction({
         ...transaction,
+        ledgerId: txLedgerId,
         date: txDate,
         type,
         amount: num,
@@ -36,6 +39,7 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
     } else {
       await addTransaction({
         id: newId(),
+        ledgerId: txLedgerId,
         date: txDate,
         type,
         amount: num,
@@ -65,6 +69,22 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
             </svg>
           </button>
         </div>
+
+        {/* Ledger picker — only shown when multiple ledgers exist */}
+        {allLedgers.length > 1 && (
+          <div className={styles.field}>
+            <label className={styles.label}>Ledger</label>
+            <select
+              className={styles.textInput}
+              value={txLedgerId}
+              onChange={(e) => setTxLedgerId(e.target.value)}
+            >
+              {allLedgers.map((l) => (
+                <option key={l.id} value={l.id}>{l.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Date */}
         <div className={styles.field}>
