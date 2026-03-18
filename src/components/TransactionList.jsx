@@ -38,9 +38,6 @@ export default function TransactionList({ transactions, onEdit, emptyMessage, re
           onContextMenu={(e) => { if (!readOnly && onEdit) { e.preventDefault(); onEdit(tx) } }}
         >
           <div className={styles.left}>
-            <span className={`${styles.badge} ${tx.type === 'credit' ? styles.credit : styles.debit}`}>
-              {tx.type === 'credit' ? 'CR' : 'DR'}
-            </span>
             <span className={styles.particulars}>{tx.particulars || '—'}</span>
           </div>
           <div className={styles.right}>
