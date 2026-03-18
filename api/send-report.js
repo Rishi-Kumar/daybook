@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { formatCurrency, formatDateLong, generatePrintReport } from '../src/utils.js'
+import { formatCurrency, formatDateDMY, formatDateLong, generatePrintReport } from '../src/utils.js'
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -57,7 +57,7 @@ function generatePDF(groups, fromDate, toDate, ledgerName = '') {
   const separatorRows = new Set()
 
   for (const [groupIdx, { date, transactions, opening, closing }] of groups.entries()) {
-    const dateLabel = formatDateLong(date)
+    const dateLabel = formatDateDMY(date)
     let dateUsed = false
     const groupStartRow = body.length
 

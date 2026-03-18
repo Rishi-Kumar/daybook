@@ -33,6 +33,11 @@ export function formatDateLong(dateStr) {
   })
 }
 
+export function formatDateDMY(dateStr) {
+  const [y, m, d] = dateStr.split('-')
+  return `${d}/${m}/${y}`
+}
+
 export function formatDateShort(dateStr) {
   const [y, m, d] = dateStr.split('-').map(Number)
   const date = new Date(y, m - 1, d)
@@ -59,7 +64,7 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
 
   const tableRows = []
   for (const [i, { date, transactions, opening, closing }] of groups.entries()) {
-    const dateLabel = formatDateLong(date)
+    const dateLabel = formatDateDMY(date)
     let dateUsed = false
     let groupStarted = false
 
