@@ -1,0 +1,212 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 20px 10px;
+  padding-top: calc(var(--safe-top) + 16px);
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.headerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.appName {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.emailBtn {
+  background: none;
+  border: none;
+  padding: 6px;
+  color: var(--accent);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emailBtn:disabled {
+  color: var(--text-muted);
+  opacity: 0.4;
+  cursor: default;
+}
+
+.emailBtn:active:not(:disabled) {
+  opacity: 0.6;
+}
+
+/* Date range picker */
+.rangePicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dateField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dateLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+.dateInput {
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 6px;
+  font-size: 13px;
+  color: var(--text);
+  width: 100%;
+  min-width: 0;
+  color-scheme: dark;
+}
+
+.dateInput:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.dateSep {
+  width: 1px;
+  height: 36px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin-top: 16px;
+}
+
+/* Scrollable list */
+.listArea {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: 80px; /* room for FAB */
+}
+
+/* Day group */
+.group {
+  border-bottom: 1px solid var(--border);
+}
+
+.group:last-of-type {
+  border-bottom: none;
+}
+
+.dayHeader {
+  padding: 10px 20px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.dayDate {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.2px;
+}
+
+.txList {
+  list-style: none;
+}
+
+/* Balance rows */
+.txItem {
+  display: flex;
+  align-items: center;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+
+.balanceRow {
+  background: var(--bg-card);
+}
+
+.closingRow {
+  border-top: 1px solid var(--border);
+  border-bottom: none;
+}
+
+.balanceRowLabel {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+
+.balanceRowAmt {
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+.up {
+  color: var(--credit);
+}
+
+.down {
+  color: var(--debit);
+}
+
+/* FAB */
+.fab {
+  position: absolute;
+  bottom: calc(var(--safe-bottom) + 20px);
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(124, 106, 247, 0.5);
+  z-index: 10;
+}
+
+.fab:active {
+  transform: scale(0.93);
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  font-size: 15px;
+}
