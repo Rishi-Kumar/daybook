@@ -26,25 +26,6 @@
   min-width: 0;
 }
 
-.badge {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  padding: 3px 7px;
-  border-radius: 5px;
-  flex-shrink: 0;
-}
-
-.credit {
-  background: var(--credit-bg);
-  color: var(--credit);
-}
-
-.debit {
-  background: var(--debit-bg);
-  color: var(--debit);
-}
-
 .particulars {
   font-size: 15px;
   color: var(--text);
