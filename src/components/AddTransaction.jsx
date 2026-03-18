@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { addTransaction, updateTransaction } from '../db'
+import { addTransaction, updateTransaction, deleteTransaction } from '../db'
 import { newId } from '../utils'
 import styles from './AddTransaction.module.css'
 
@@ -10,6 +10,7 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
   const [type, setType] = useState(isEdit ? transaction.type : 'credit')
   const [particulars, setParticulars] = useState(isEdit ? transaction.particulars : '')
   const [error, setError] = useState('')
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const particularsRef = useRef(null)
 
   useEffect(() => {
@@ -42,6 +43,11 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
         createdAt: Date.now(),
       })
     }
+    onSaved()
+  }
+
+  async function handleDelete() {
+    await deleteTransaction(transaction.id)
     onSaved()
   }
 
@@ -122,6 +128,22 @@ export default function AddTransaction({ date, transaction, onClose, onSaved }) 
         <button className={`${styles.saveBtn} ${type === 'credit' ? styles.saveBtnCredit : styles.saveBtnDebit}`} onClick={handleSave}>
           {isEdit ? 'Update' : 'Save'} {type === 'credit' ? 'Credit' : 'Debit'}
         </button>
+
+        {isEdit && (
+          confirmingDelete ? (
+            <div className={styles.deleteConfirm}>
+              <span className={styles.deleteConfirmText}>Delete this transaction?</span>
+              <div className={styles.deleteConfirmBtns}>
+                <button className={styles.deleteCancelBtn} onClick={() => setConfirmingDelete(false)}>Cancel</button>
+                <button className={styles.deleteConfirmBtn} onClick={handleDelete}>Delete</button>
+              </div>
+            </div>
+          ) : (
+            <button className={styles.deleteBtn} onClick={() => setConfirmingDelete(true)}>
+              Delete transaction
+            </button>
+          )
+        )}
       </div>
     </div>
   )

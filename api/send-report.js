@@ -87,7 +87,7 @@ function generatePDF(groups, fromDate, toDate) {
 
     autoTable(doc, {
       startY: y + 7,
-      head: [['Particulars', 'Credit', 'Debit']],
+      head: [],
       body: body.map(([p, c, d]) => [p, c, d]),
       margin: { left: ML, right: MR },
       tableWidth: CW,

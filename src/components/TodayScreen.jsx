@@ -46,10 +46,8 @@ export default function TodayScreen() {
       <div className={styles.listArea}>
         <TransactionList
           transactions={transactions}
-          onDeleted={load}
           onEdit={(tx) => setEditingTx(tx)}
           emptyMessage="No transactions yet"
-          confirmDelete
         />
       </div>
 
