@@ -96,6 +96,22 @@
 
 .inputWrapper:focus-within { border-color: var(--accent); }
 
+.signToggle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 0 4px 0 0;
+  line-height: 1;
+  min-width: 24px;
+  text-align: center;
+}
+
+.signToggle:active { opacity: 0.6; }
+
+.signNegative { color: var(--debit); }
+
 .amountInput {
   flex: 1;
   background: none;
