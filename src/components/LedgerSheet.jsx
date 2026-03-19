@@ -6,7 +6,8 @@ import styles from './LedgerSheet.module.css'
 export default function LedgerSheet({ ledger, onClose, onSaved, onDeleted }) {
   const isEdit = Boolean(ledger)
   const [name, setName] = useState(isEdit ? ledger.name : '')
-  const [balance, setBalance] = useState(isEdit ? String(ledger.openingBalance) : '')
+  const [balance, setBalance] = useState(isEdit ? String(Math.abs(ledger.openingBalance)) : '')
+  const [isNegative, setIsNegative] = useState(isEdit ? ledger.openingBalance < 0 : false)
   const [error, setError] = useState('')
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const nameRef = useRef(null)
@@ -20,15 +21,16 @@ export default function LedgerSheet({ ledger, onClose, onSaved, onDeleted }) {
     const trimmedName = name.trim()
     if (!trimmedName) { setError('Enter a ledger name'); return }
     const amount = parseFloat(balance)
-    if (isNaN(amount) || amount < 0) { setError('Enter a valid opening balance'); return }
+    if (isNaN(amount)) { setError('Enter a valid opening balance'); return }
+    const signedAmount = isNegative ? -Math.abs(amount) : amount
 
     if (isEdit) {
-      await updateLedger({ ...ledger, name: trimmedName, openingBalance: amount })
+      await updateLedger({ ...ledger, name: trimmedName, openingBalance: signedAmount })
     } else {
       const newLedger = {
         id: newId(),
         name: trimmedName,
-        openingBalance: amount,
+        openingBalance: signedAmount,
         setupDate: today(),
         createdAt: Date.now(),
       }
@@ -73,6 +75,13 @@ export default function LedgerSheet({ ledger, onClose, onSaved, onDeleted }) {
         <div className={styles.field}>
           <label className={styles.label}>Opening Balance</label>
           <div className={styles.inputWrapper}>
+            <button
+              type="button"
+              className={`${styles.signToggle} ${isNegative ? styles.signNegative : ''}`}
+              onClick={() => setIsNegative(v => !v)}
+            >
+              {isNegative ? '−' : '+'}
+            </button>
             <input
               className={styles.amountInput}
               type="number"

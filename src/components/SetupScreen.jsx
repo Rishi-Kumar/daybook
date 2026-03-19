@@ -6,19 +6,20 @@ import styles from './SetupScreen.module.css'
 export default function SetupScreen({ onDone }) {
   const [name, setName] = useState('Cash')
   const [value, setValue] = useState('')
+  const [isNegative, setIsNegative] = useState(false)
   const [error, setError] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
     const amount = parseFloat(value)
-    if (isNaN(amount) || amount < 0) {
+    if (isNaN(amount)) {
       setError('Please enter a valid amount')
       return
     }
     const ledger = {
       id: newId(),
       name: name.trim() || 'Cash',
-      openingBalance: amount,
+      openingBalance: isNegative ? -Math.abs(amount) : amount,
       setupDate: today(),
       createdAt: Date.now(),
     }
@@ -52,6 +53,13 @@ export default function SetupScreen({ onDone }) {
         <label className={styles.label} style={{ marginTop: '8px' }}>Opening Balance</label>
         <p className={styles.hint}>Enter the current balance to start tracking from today.</p>
         <div className={styles.inputWrapper}>
+          <button
+            type="button"
+            className={`${styles.signToggle} ${isNegative ? styles.signNegative : ''}`}
+            onClick={() => setIsNegative(v => !v)}
+          >
+            {isNegative ? '−' : '+'}
+          </button>
           <input
             className={styles.input}
             type="number"
