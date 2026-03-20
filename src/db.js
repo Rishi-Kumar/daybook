@@ -197,3 +197,28 @@ export async function getOpeningBalancesForDates(dates, ledgerId) {
 export function calcClosing(opening, transactions) {
   return transactions.reduce((bal, tx) => bal + tx.amount, opening)
 }
+
+// Fetch all ledgers with their transaction groups for a given date range.
+// Ledgers with no transactions in the range are excluded.
+export async function getAllLedgersGroupsForRange(fromDate, toDate) {
+  const ledgers = await getAllLedgers()
+  const results = []
+  for (const ledger of ledgers) {
+    const allDates = await getAllDatesWithTransactions(ledger.id)
+    const inRange = allDates.filter((d) => d >= fromDate && d <= toDate)
+    if (inRange.length === 0) continue
+    const [allTransactions, openings] = await Promise.all([
+      Promise.all(inRange.map((date) => getTransactionsForDate(date, ledger.id))),
+      getOpeningBalancesForDates(inRange, ledger.id),
+    ])
+    const groups = inRange
+      .map((date, i) => {
+        const transactions = allTransactions[i]
+        const opening = openings.get(date)
+        return { date, transactions, opening, closing: calcClosing(opening, transactions) }
+      })
+      .sort((a, b) => (a.date > b.date ? 1 : -1))
+    results.push({ name: ledger.name, groups })
+  }
+  return results
+}

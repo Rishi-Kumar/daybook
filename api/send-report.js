@@ -18,40 +18,16 @@ const HEADER_BG = [240, 240, 248]  // table header bg
 const GRAY_TEXT = [100, 100, 120]
 const DARK_TEXT = [30,  30,   50]
 
-function generatePDF(groups, fromDate, toDate, ledgerName = '') {
-  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+function renderLedgerSection(doc, name, groups, startY, ML, MR, CW) {
   const fmt = formatCurrency
-  const ML = 14
-  const MR = 14
-  const CW = 210 - ML - MR
 
-  // ── Header ────────────────────────────────────────────────────
-  doc.setFontSize(20)
+  // Ledger name header
+  doc.setFontSize(13)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(...DARK_TEXT)
-  doc.text(ledgerName ? `${ledgerName} — Daybook Report` : 'Daybook Report', ML, 18)
-
-  doc.setFontSize(9)
-  doc.setFont('helvetica', 'normal')
-  doc.setTextColor(...GRAY_TEXT)
-  const dateRange = `From: ${formatDateLong(fromDate)}   To: ${formatDateLong(toDate)}`
-  doc.text(dateRange, ML, 25)
-
-  const generated = new Date().toLocaleDateString('en-IN', {
-    day: 'numeric', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  })
-  doc.text(`Generated: ${generated}`, ML, 30)
-
-  // thin rule under header
-  doc.setDrawColor(180, 180, 200)
-  doc.setLineWidth(0.4)
-  doc.line(ML, 33, ML + CW, 33)
+  doc.text(name, ML, startY)
 
   // ── Build flat body ───────────────────────────────────────────
-  // Each row: [date, particulars, creditAmt, debitAmt, tag]
-  // tag ('balance'|'credit'|'debit') is a 5th internal column used only in
-  // didParseCell for styling — stripped when passed to autoTable.
   const body = []
   const balanceRows = new Set()
   const separatorRows = new Set()
@@ -93,9 +69,8 @@ function generatePDF(groups, fromDate, toDate, ledgerName = '') {
     if (groupIdx > 0) separatorRows.add(groupStartRow)
   }
 
-  // ── Single unified table ───────────────────────────────────────
   autoTable(doc, {
-    startY: 39,
+    startY: startY + 6,
     head: [['Date', 'Particulars', 'Credit', 'Debit']],
     body: body.map(([d, p, c, dr]) => [d, p, c, dr]),
     margin: { left: ML, right: MR },
@@ -145,15 +120,50 @@ function generatePDF(groups, fromDate, toDate, ledgerName = '') {
       }
     },
   })
+}
+
+function generatePDF(ledgers, fromDate, toDate) {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' })
+  const ML = 14
+  const MR = 14
+  const CW = 210 - ML - MR
+
+  // ── Global header (first page only) ───────────────────────────
+  doc.setFontSize(20)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(...DARK_TEXT)
+  doc.text('Daybook Report', ML, 18)
+
+  doc.setFontSize(9)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(...GRAY_TEXT)
+  const dateRange = `From: ${formatDateLong(fromDate)}   To: ${formatDateLong(toDate)}`
+  doc.text(dateRange, ML, 25)
+
+  const generated = new Date().toLocaleDateString('en-IN', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  })
+  doc.text(`Generated: ${generated}`, ML, 30)
+
+  doc.setDrawColor(180, 180, 200)
+  doc.setLineWidth(0.4)
+  doc.line(ML, 33, ML + CW, 33)
+
+  // ── One section per ledger, each on its own page ───────────────
+  for (const [i, { name, groups }] of ledgers.entries()) {
+    if (i > 0) doc.addPage()
+    const sectionY = i === 0 ? 39 : 18
+    renderLedgerSection(doc, name, groups, sectionY, ML, MR, CW)
+  }
 
   return Buffer.from(doc.output('arraybuffer'))
 }
 
-function generateEmailBody(fromDate, toDate, ledgerName) {
+function generateEmailBody(fromDate, toDate) {
   const range = `${formatDateLong(fromDate)} – ${formatDateLong(toDate)}`
-  const title = ledgerName ? `${ledgerName} — Daybook Report` : 'Daybook Report'
   return `<!DOCTYPE html><html><body style="font-family:sans-serif;color:#1e1e32;padding:24px">
-    <h2 style="margin:0 0 8px">${title}</h2>
+    <h2 style="margin:0 0 8px">Daybook Report</h2>
     <p style="margin:0 0 16px;color:#666">Report period: ${range}</p>
     <p style="margin:0">Please find the full report attached as a PDF.</p>
   </body></html>`
@@ -166,21 +176,20 @@ export default async function handler(req, res) {
 
   // Vercel doesn't always auto-parse JSON for ESM functions — handle both cases
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-  const { to, groups, fromDate, toDate, ledgerName } = body ?? {}
-  if (!to || !groups) {
+  const { to, ledgers, fromDate, toDate } = body ?? {}
+  if (!to || !ledgers) {
     return res.status(400).json({ error: 'Missing required fields' })
   }
 
-  const html      = generateEmailBody(fromDate, toDate, ledgerName)
-  const pdfBuffer = generatePDF(groups, fromDate, toDate, ledgerName)
-  const safeName  = ledgerName ? ledgerName.replace(/[^a-z0-9]/gi, '-').toLowerCase() : 'report'
-  const filename  = `daybook-${safeName}-${fromDate}-to-${toDate}.pdf`
+  const html      = generateEmailBody(fromDate, toDate)
+  const pdfBuffer = generatePDF(ledgers, fromDate, toDate)
+  const filename  = `daybook-report-${fromDate}-to-${toDate}.pdf`
 
   try {
     await transporter.sendMail({
       from: `Daybook <${process.env.GMAIL_USER}>`,
       to,
-      subject: ledgerName ? `Daybook Report — ${ledgerName}` : 'Daybook Report',
+      subject: 'Daybook Report',
       html,
       attachments: [{ filename, content: pdfBuffer }],
     })

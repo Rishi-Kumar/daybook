@@ -127,7 +127,6 @@ export default function HistoryScreen() {
 
       {showEmail && (
         <EmailSheet
-          groups={groups}
           fromDate={fromDate}
           toDate={toDate}
           onClose={() => setShowEmail(false)}
