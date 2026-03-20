@@ -79,7 +79,7 @@ export default function MainScreen({ ledgerId }) {
             className={styles.emailBtn}
             onClick={() => setShowEmail(true)}
             aria-label="Email report"
-            disabled={loading || groups.length === 0}
+            disabled={loading}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="4" width="20" height="16" rx="2"/>
@@ -180,10 +180,8 @@ export default function MainScreen({ ledgerId }) {
 
       {showEmail && (
         <EmailSheet
-          groups={groups}
           fromDate={fromDate}
           toDate={toDate}
-          ledgerName={ledgerName}
           onClose={() => setShowEmail(false)}
         />
       )}
