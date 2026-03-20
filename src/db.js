@@ -1,7 +1,7 @@
 import { openDB } from 'idb'
 
 const DB_NAME = 'daybook'
-const DB_VERSION = 2
+const DB_VERSION = 3
 
 function getDB() {
   return openDB(DB_NAME, DB_VERSION, {
@@ -13,6 +13,16 @@ function getDB() {
         txStore.createIndex('by_date', 'date')
         txStore.createIndex('by_ledger_date', ['ledgerId', 'date'])
         db.createObjectStore('ledgers', { keyPath: 'id' })
+      }
+
+      if (oldVersion < 3 && oldVersion >= 1) {
+        // Migrate v2 → v3: debit amounts become negative; type stays but is now derived from sign
+        const allTxs = await tx.objectStore('transactions').getAll()
+        for (const t of allTxs) {
+          if (t.type === 'debit' && t.amount > 0) {
+            await tx.objectStore('transactions').put({ ...t, amount: -t.amount })
+          }
+        }
       }
 
       if (oldVersion === 1) {
@@ -185,7 +195,5 @@ export async function getOpeningBalancesForDates(dates, ledgerId) {
 }
 
 export function calcClosing(opening, transactions) {
-  return transactions.reduce((bal, tx) => {
-    return tx.type === 'credit' ? bal + tx.amount : bal - tx.amount
-  }, opening)
+  return transactions.reduce((bal, tx) => bal + tx.amount, opening)
 }
