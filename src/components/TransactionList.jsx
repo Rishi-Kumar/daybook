@@ -42,7 +42,7 @@ export default function TransactionList({ transactions, onEdit, emptyMessage, re
           </div>
           <div className={styles.right}>
             <span className={`${styles.amount} ${tx.type === 'credit' ? styles.creditAmt : styles.debitAmt}`}>
-              {formatCurrency(Math.abs(tx.amount))}
+              {formatCurrency(tx.amount)}
             </span>
           </div>
         </li>
