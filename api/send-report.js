@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { formatCurrency, formatDateDMY, formatDateLong, generatePrintReport } from '../src/utils.js'
+import { formatCurrency, formatDateDMY, formatDateLong } from '../src/utils.js'
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -149,6 +149,16 @@ function generatePDF(groups, fromDate, toDate, ledgerName = '') {
   return Buffer.from(doc.output('arraybuffer'))
 }
 
+function generateEmailBody(fromDate, toDate, ledgerName) {
+  const range = `${formatDateLong(fromDate)} – ${formatDateLong(toDate)}`
+  const title = ledgerName ? `${ledgerName} — Daybook Report` : 'Daybook Report'
+  return `<!DOCTYPE html><html><body style="font-family:sans-serif;color:#1e1e32;padding:24px">
+    <h2 style="margin:0 0 8px">${title}</h2>
+    <p style="margin:0 0 16px;color:#666">Report period: ${range}</p>
+    <p style="margin:0">Please find the full report attached as a PDF.</p>
+  </body></html>`
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -161,7 +171,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing required fields' })
   }
 
-  const html      = generatePrintReport(groups, fromDate, toDate, { forEmail: true, ledgerName })
+  const html      = generateEmailBody(fromDate, toDate, ledgerName)
   const pdfBuffer = generatePDF(groups, fromDate, toDate, ledgerName)
   const safeName  = ledgerName ? ledgerName.replace(/[^a-z0-9]/gi, '-').toLowerCase() : 'report'
   const filename  = `daybook-${safeName}-${fromDate}-to-${toDate}.pdf`
