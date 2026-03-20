@@ -121,6 +121,10 @@ function generatePDF(groups, fromDate, toDate, ledgerName = '') {
       3: { halign: 'right', cellWidth: 34, fontStyle: 'bold' },
     },
     didParseCell(data) {
+      if (data.section === 'head' && (data.column.index === 2 || data.column.index === 3)) {
+        data.cell.styles.halign = 'right'
+        return
+      }
       if (data.section !== 'body') return
       const [, , crVal, drVal, tag] = body[data.row.index]
       const isBalance = balanceRows.has(data.row.index)
