@@ -6,8 +6,8 @@ import styles from './AddTransaction.module.css'
 export default function AddTransaction({ date, ledgerId, transaction, onClose, onSaved }) {
   const isEdit = Boolean(transaction)
   const [txDate, setTxDate] = useState(isEdit ? transaction.date : date)
-  const [amount, setAmount] = useState(isEdit ? String(transaction.amount) : '')
-  const [type, setType] = useState(isEdit ? transaction.type : 'credit')
+  const [amount, setAmount] = useState(isEdit ? String(Math.abs(transaction.amount)) : '')
+  const [isNegative, setIsNegative] = useState(isEdit ? transaction.amount < 0 : false)
   const [particulars, setParticulars] = useState(isEdit ? transaction.particulars : '')
   const [txLedgerId, setTxLedgerId] = useState(isEdit ? transaction.ledgerId : ledgerId)
   const [allLedgers, setAllLedgers] = useState([])
@@ -27,13 +27,15 @@ export default function AddTransaction({ date, ledgerId, transaction, onClose, o
       setError('Enter a valid amount')
       return
     }
+    const signedAmount = isNegative ? -num : num
+    const type = isNegative ? 'debit' : 'credit'
     if (isEdit) {
       await updateTransaction({
         ...transaction,
         ledgerId: txLedgerId,
         date: txDate,
         type,
-        amount: num,
+        amount: signedAmount,
         particulars: particulars.trim(),
       })
     } else {
@@ -42,7 +44,7 @@ export default function AddTransaction({ date, ledgerId, transaction, onClose, o
         ledgerId: txLedgerId,
         date: txDate,
         type,
-        amount: num,
+        amount: signedAmount,
         particulars: particulars.trim(),
         createdAt: Date.now(),
       })
@@ -112,26 +114,17 @@ export default function AddTransaction({ date, ledgerId, transaction, onClose, o
           />
         </div>
 
-        {/* Credit / Debit toggle */}
-        <div className={styles.toggle}>
-          <button
-            className={`${styles.toggleBtn} ${type === 'credit' ? styles.activeCredit : ''}`}
-            onClick={() => setType('credit')}
-          >
-            Credit
-          </button>
-          <button
-            className={`${styles.toggleBtn} ${type === 'debit' ? styles.activeDebit : ''}`}
-            onClick={() => setType('debit')}
-          >
-            Debit
-          </button>
-        </div>
-
         {/* Amount */}
         <div className={styles.field}>
           <label className={styles.label}>Amount</label>
           <div className={styles.inputWrapper}>
+            <button
+              type="button"
+              className={`${styles.signToggle} ${isNegative ? styles.signNegative : ''}`}
+              onClick={() => setIsNegative(v => !v)}
+            >
+              {isNegative ? '−' : '+'}
+            </button>
             <input
               className={styles.amountInput}
               type="number"
@@ -145,8 +138,8 @@ export default function AddTransaction({ date, ledgerId, transaction, onClose, o
           {error && <p className={styles.error}>{error}</p>}
         </div>
 
-        <button className={`${styles.saveBtn} ${type === 'credit' ? styles.saveBtnCredit : styles.saveBtnDebit}`} onClick={handleSave}>
-          {isEdit ? 'Update' : 'Save'} {type === 'credit' ? 'Credit' : 'Debit'}
+        <button className={`${styles.saveBtn} ${isNegative ? styles.saveBtnDebit : styles.saveBtnCredit}`} onClick={handleSave}>
+          {isEdit ? 'Update' : 'Save'}
         </button>
 
         {isEdit && (

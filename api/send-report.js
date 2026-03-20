@@ -74,8 +74,8 @@ function generatePDF(groups, fromDate, toDate, ledgerName = '') {
       body.push([
         dateUsed ? '' : dateLabel,
         tx.particulars || '—',
-        tx.type === 'credit' ? fmt(tx.amount) : '',
-        tx.type === 'debit'  ? fmt(tx.amount) : '',
+        tx.type === 'credit' ? fmt(Math.abs(tx.amount)) : '',
+        tx.type === 'debit'  ? fmt(Math.abs(tx.amount)) : '',
         tx.type,
       ])
       dateUsed = true

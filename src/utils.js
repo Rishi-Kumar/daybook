@@ -91,8 +91,8 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
       addRow(
         dateUsed ? '' : dateLabel,
         tx.particulars || '—',
-        tx.type === 'credit' ? fmt(tx.amount) : '',
-        tx.type === 'debit' ? fmt(tx.amount) : '',
+        tx.type === 'credit' ? fmt(Math.abs(tx.amount)) : '',
+        tx.type === 'debit' ? fmt(Math.abs(tx.amount)) : '',
       )
       dateUsed = true
     }
