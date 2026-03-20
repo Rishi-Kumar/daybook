@@ -132,7 +132,7 @@ export function generatePrintReport(groups, fromDate, toDate, { forEmail = false
       border: 1px solid #ddd;
       vertical-align: middle;
     }
-    th { background: #f0f0f0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #555; }
+    th { background: #f0f0f0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #555; text-align: left; }
     td:last-child, th:last-child { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     td:nth-child(3), th:nth-child(3) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
     .date-col { white-space: nowrap; color: #555; font-size: 13px; }
