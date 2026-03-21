@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { formatCurrency, formatDateDMY, formatDateLong } from '../src/utils.js'
+import { formatCurrency, formatDateDMY, formatDateLong, formatMonthEnd } from '../src/utils.js'
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -61,7 +61,7 @@ function renderLedgerSection(doc, name, groups, startY, ML, MR, CW) {
 
     if (isMonthEnd) {
       body.push([
-        dateLabel,
+        isLastGroup ? dateLabel : formatMonthEnd(date),
         'Closing Balance',
         closing >= 0 ? fmt(closing) : '',
         closing < 0  ? fmt(Math.abs(closing)) : '',

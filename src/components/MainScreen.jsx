@@ -6,7 +6,7 @@ import {
   getLedger,
   calcClosing,
 } from '../db'
-import { today, toDateStr, formatDateLong, formatCurrency } from '../utils'
+import { today, toDateStr, formatDateLong, formatCurrency, formatMonthEnd } from '../utils'
 import TransactionList from './TransactionList'
 import AddTransaction from './AddTransaction'
 import EmailSheet from './EmailSheet'
@@ -143,7 +143,9 @@ export default function MainScreen({ ledgerId }) {
                 <div className={`${styles.txItem} ${styles.balanceRow} ${styles.closingRow}`}>
                   <div className={styles.balanceRowLabel}>
                     <span>Closing Balance</span>
-                    <span className={styles.closingDate}>{formatDateLong(date)}</span>
+                    {i !== groups.length - 1 && (
+                      <span className={styles.closingDate}>{formatMonthEnd(date)}</span>
+                    )}
                   </div>
                   <span className={`${styles.balanceRowAmt} ${closing < 0 ? styles.down : styles.up}`}>
                     {formatCurrency(closing)}
