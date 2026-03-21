@@ -10,6 +10,12 @@ export default function App() {
   const [isSetup, setIsSetup] = useState(false)
   const [tab, setTab] = useState('transactions')
   const [activeLedgerId, setActiveLedgerId] = useState(null)
+  const [showAdd, setShowAdd] = useState(false)
+
+  function handleAdd() {
+    setTab('transactions')
+    setShowAdd(true)
+  }
 
   useEffect(() => {
     async function init() {
@@ -60,7 +66,7 @@ export default function App() {
   return (
     <>
       <div className="screen-area">
-        {tab === 'transactions' && <MainScreen ledgerId={activeLedgerId} />}
+        {tab === 'transactions' && <MainScreen ledgerId={activeLedgerId} showAdd={showAdd} onCloseAdd={() => setShowAdd(false)} />}
         {tab === 'ledgers' && (
           <LedgersScreen
             activeLedgerId={activeLedgerId}
@@ -69,7 +75,7 @@ export default function App() {
           />
         )}
       </div>
-      <BottomNav active={tab} onChange={setTab} />
+      <BottomNav active={tab} onChange={setTab} onAdd={handleAdd} />
       <style>{`
         .screen-area {
           flex: 1;

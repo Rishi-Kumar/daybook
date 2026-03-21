@@ -1,5 +1,6 @@
 .nav {
   display: flex;
+  align-items: center;
   height: calc(var(--tab-h) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
   background: var(--bg-card);
@@ -27,4 +28,22 @@
 
 .active {
   color: var(--accent);
+}
+
+.addBtn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(124, 106, 247, 0.45);
+  margin-bottom: calc(var(--safe-bottom) * 0.5);
+}
+
+.addBtn:active {
+  transform: scale(0.93);
 }
