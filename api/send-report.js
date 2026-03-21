@@ -33,6 +33,8 @@ function renderLedgerSection(doc, name, groups, startY, ML, MR, CW) {
   const separatorRows = new Set()
 
   for (const [groupIdx, { date, transactions, opening, closing }] of groups.entries()) {
+    const isLastGroup = groupIdx === groups.length - 1
+    const isMonthEnd = isLastGroup || date.slice(0, 7) !== groups[groupIdx + 1].date.slice(0, 7)
     const dateLabel = formatDateDMY(date)
     let dateUsed = false
     const groupStartRow = body.length
@@ -57,14 +59,16 @@ function renderLedgerSection(doc, name, groups, startY, ML, MR, CW) {
       dateUsed = true
     }
 
-    body.push([
-      dateUsed ? '' : dateLabel,
-      'Closing Balance',
-      closing >= 0 ? fmt(closing) : '',
-      closing < 0  ? fmt(Math.abs(closing)) : '',
-      'balance',
-    ])
-    balanceRows.add(body.length - 1)
+    if (isMonthEnd) {
+      body.push([
+        dateUsed ? '' : dateLabel,
+        'Closing Balance',
+        closing >= 0 ? fmt(closing) : '',
+        closing < 0  ? fmt(Math.abs(closing)) : '',
+        'balance',
+      ])
+      balanceRows.add(body.length - 1)
+    }
 
     if (groupIdx > 0) separatorRows.add(groupStartRow)
   }
