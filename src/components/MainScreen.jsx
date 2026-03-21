@@ -139,12 +139,14 @@ export default function MainScreen({ ledgerId }) {
                 onEdit={(tx) => setEditingTx(tx)}
               />
 
-              <div className={`${styles.txItem} ${styles.balanceRow} ${styles.closingRow}`}>
-                <span className={styles.balanceRowLabel}>Closing Balance</span>
-                <span className={`${styles.balanceRowAmt} ${closing < 0 ? styles.down : styles.up}`}>
-                  {formatCurrency(closing)}
-                </span>
-              </div>
+              {(i === groups.length - 1 || date.slice(0, 7) !== groups[i + 1].date.slice(0, 7)) && (
+                <div className={`${styles.txItem} ${styles.balanceRow} ${styles.closingRow}`}>
+                  <span className={styles.balanceRowLabel}>Closing Balance</span>
+                  <span className={`${styles.balanceRowAmt} ${closing < 0 ? styles.down : styles.up}`}>
+                    {formatCurrency(closing)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         ))}
