@@ -141,7 +141,10 @@ export default function MainScreen({ ledgerId }) {
 
               {(i === groups.length - 1 || date.slice(0, 7) !== groups[i + 1].date.slice(0, 7)) && (
                 <div className={`${styles.txItem} ${styles.balanceRow} ${styles.closingRow}`}>
-                  <span className={styles.balanceRowLabel}>Closing Balance</span>
+                  <div className={styles.balanceRowLabel}>
+                    <span>Closing Balance</span>
+                    <span className={styles.closingDate}>{formatDateLong(date)}</span>
+                  </div>
                   <span className={`${styles.balanceRowAmt} ${closing < 0 ? styles.down : styles.up}`}>
                     {formatCurrency(closing)}
                   </span>

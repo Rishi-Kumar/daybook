@@ -61,7 +61,7 @@ function renderLedgerSection(doc, name, groups, startY, ML, MR, CW) {
 
     if (isMonthEnd) {
       body.push([
-        dateUsed ? '' : dateLabel,
+        dateLabel,
         'Closing Balance',
         closing >= 0 ? fmt(closing) : '',
         closing < 0  ? fmt(Math.abs(closing)) : '',
