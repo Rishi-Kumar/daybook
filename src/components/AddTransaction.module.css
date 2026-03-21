@@ -61,35 +61,6 @@
   opacity: 0.6;
 }
 
-/* Toggle */
-.toggle {
-  display: flex;
-  background: var(--bg-elevated);
-  border-radius: var(--radius-sm);
-  padding: 3px;
-  gap: 3px;
-}
-
-.toggleBtn {
-  flex: 1;
-  padding: 10px;
-  border-radius: calc(var(--radius-sm) - 2px);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-muted);
-  transition: background 0.15s, color 0.15s;
-}
-
-.activeCredit {
-  background: var(--credit-bg);
-  color: var(--credit);
-}
-
-.activeDebit {
-  background: var(--debit-bg);
-  color: var(--debit);
-}
-
 /* Fields */
 .field {
   display: flex;
