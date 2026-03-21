@@ -38,3 +38,9 @@ export function formatDateDMY(dateStr) {
   return `${d}/${m}/${y}`
 }
 
+export function formatMonthEnd(dateStr) {
+  const [y, m] = dateStr.split('-').map(Number)
+  const month = new Date(y, m - 1, 1).toLocaleString('en-IN', { month: 'short' })
+  return `End of ${month} ${y}`
+}
+
