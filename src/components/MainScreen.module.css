@@ -176,6 +176,17 @@
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.closingDate {
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.7;
 }
 
 .balanceRowAmt {
