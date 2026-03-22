@@ -1,7 +1,8 @@
 import nodemailer from 'nodemailer'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import { formatCurrency, formatDateDMY, formatDateLong, formatMonthEnd } from '../src/utils.js'
+import { createClient } from '@supabase/supabase-js'
+import { formatCurrency, formatDateDMY, formatDateLong, formatMonthEnd, buildLedgerGroups } from '../src/utils.js'
 
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -173,16 +174,69 @@ function generateEmailBody(fromDate, toDate) {
   </body></html>`
 }
 
+async function fetchLedgerGroups(userId, fromDate, toDate) {
+  const supabaseAdmin = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { persistSession: false } }
+  )
+
+  const [ledgersResult, txResult] = await Promise.all([
+    supabaseAdmin.from('ledgers').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+    supabaseAdmin.from('transactions').select('*').eq('user_id', userId).gte('date', fromDate).lte('date', toDate).order('created_at', { ascending: true }),
+  ])
+
+  if (ledgersResult.error) throw new Error(ledgersResult.error.message)
+  if (txResult.error) throw new Error(txResult.error.message)
+
+  const ledgers = (ledgersResult.data ?? []).map((r) => ({
+    id: r.id,
+    name: r.name,
+    openingBalance: Number(r.opening_balance),
+    setupDate: r.setup_date,
+    createdAt: Number(r.created_at),
+  }))
+
+  const transactions = (txResult.data ?? []).map((r) => ({
+    id: r.id,
+    ledgerId: r.ledger_id,
+    date: r.date,
+    type: r.type,
+    amount: Number(r.amount),
+    particulars: r.particulars,
+    createdAt: Number(r.created_at),
+  }))
+
+  return buildLedgerGroups(ledgers, transactions)
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
+  // Verify auth token
+  const token = req.headers.authorization?.split(' ')[1]
+  if (!token) return res.status(401).json({ error: 'Unauthorised' })
+
+  const supabaseAdmin = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    { auth: { persistSession: false } }
+  )
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token)
+  if (authError || !user) return res.status(401).json({ error: 'Unauthorised' })
+
   // Vercel doesn't always auto-parse JSON for ESM functions — handle both cases
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-  const { to, ledgers, fromDate, toDate } = body ?? {}
-  if (!to || !ledgers) {
+  const { to, fromDate, toDate } = body ?? {}
+  if (!to || !fromDate || !toDate) {
     return res.status(400).json({ error: 'Missing required fields' })
+  }
+
+  const ledgers = await fetchLedgerGroups(user.id, fromDate, toDate)
+  if (ledgers.length === 0) {
+    return res.status(400).json({ error: 'No transactions found in this date range' })
   }
 
   const html      = generateEmailBody(fromDate, toDate)

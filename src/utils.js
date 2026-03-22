@@ -44,3 +44,45 @@ export function formatMonthEnd(dateStr) {
   return `End of ${month} ${y}`
 }
 
+// Pure helper: given flat arrays of ledgers and transactions (already sorted),
+// builds the { name, groups } structure used by the PDF report generator.
+// Used by both db.js (client) and api/send-report.js (server).
+export function buildLedgerGroups(ledgers, transactions) {
+  const results = []
+
+  for (const ledger of ledgers) {
+    const ledgerTxs = transactions.filter((t) => t.ledgerId === ledger.id)
+    if (ledgerTxs.length === 0) continue
+
+    const byDate = {}
+    for (const tx of ledgerTxs) {
+      ;(byDate[tx.date] ??= []).push(tx)
+    }
+    // Sort transactions within each day: credits first, then by createdAt
+    for (const date of Object.keys(byDate)) {
+      byDate[date].sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'credit' ? -1 : 1
+        return a.createdAt - b.createdAt
+      })
+    }
+
+    const allDataDates = Object.keys(byDate).sort()
+    const cumulativeAfter = []
+    let balance = ledger.openingBalance
+    for (const d of allDataDates) {
+      balance = byDate[d].reduce((bal, tx) => bal + tx.amount, balance)
+      cumulativeAfter.push(balance)
+    }
+
+    const groups = allDataDates.map((date, i) => {
+      const opening = i === 0 ? ledger.openingBalance : cumulativeAfter[i - 1]
+      const txs = byDate[date]
+      return { date, transactions: txs, opening, closing: txs.reduce((b, tx) => b + tx.amount, opening) }
+    })
+
+    results.push({ name: ledger.name, groups })
+  }
+
+  return results
+}
+

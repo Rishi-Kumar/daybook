@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getSetting, setSetting, getAllLedgersGroupsForRange } from '../db'
+import { getSetting, setSetting } from '../db'
+import { supabase } from '../supabase'
 import styles from './EmailSheet.module.css'
 
 export default function EmailSheet({ fromDate, toDate, onClose }) {
@@ -21,14 +22,14 @@ export default function EmailSheet({ fromDate, toDate, onClose }) {
     setErrorMsg('')
 
     try {
-      const ledgers = await getAllLedgersGroupsForRange(fromDate, toDate)
-      if (ledgers.length === 0) {
-        throw new Error('No transactions found in this date range')
-      }
+      const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/send-report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: addr, ledgers, fromDate, toDate }),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ to: addr, fromDate, toDate }),
       })
       if (!res.ok) {
         const body = await res.json().catch(() => ({}))
