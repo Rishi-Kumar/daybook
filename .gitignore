@@ -1,3 +1,6 @@
 node_modules/
 dist/
 .vercel/
+test-results/
+.env.local
+.env*.local

@@ -1,25 +1,34 @@
 import { useState, useEffect } from 'react'
-import { getAllLedgers, getSetting, setSetting } from './db'
+import { getSetting, setSetting, refreshCache } from './db'
+import { getCache } from './cache'
+import { supabase } from './supabase'
+import AuthScreen from './components/AuthScreen'
 import SetupScreen from './components/SetupScreen'
 import MainScreen from './components/MainScreen'
 import LedgersScreen from './components/LedgersScreen'
 import BottomNav from './components/BottomNav'
 
 export default function App() {
+  const [session, setSession] = useState(undefined) // undefined=loading, null=unauthenticated, obj=authenticated
   const [ready, setReady] = useState(false)
   const [isSetup, setIsSetup] = useState(false)
   const [tab, setTab] = useState('transactions')
   const [activeLedgerId, setActiveLedgerId] = useState(null)
   const [showAdd, setShowAdd] = useState(false)
 
-  function handleAdd() {
-    setTab('transactions')
-    setShowAdd(true)
-  }
-
+  // Auth state
   useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  // Ledger init — runs after session is established
+  useEffect(() => {
+    if (!session) return
     async function init() {
-      const ledgers = await getAllLedgers()
+      const ledgers = (await refreshCache()) ?? getCache()?.ledgers ?? []
       if (ledgers.length === 0) {
         setIsSetup(false)
         setReady(true)
@@ -32,19 +41,11 @@ export default function App() {
       setReady(true)
     }
     init()
-  }, [])
+  }, [session])
 
-  if (!ready) return null
-
-  if (!isSetup) {
-    return (
-      <SetupScreen
-        onDone={(ledgerId) => {
-          setActiveLedgerId(ledgerId)
-          setIsSetup(true)
-        }}
-      />
-    )
+  function handleAdd() {
+    setTab('transactions')
+    setShowAdd(true)
   }
 
   function handleSelectLedger(id) {
@@ -63,10 +64,34 @@ export default function App() {
     }
   }
 
+  if (session === undefined) return null
+
+  if (!session) return <AuthScreen />
+
+  if (!ready) return null
+
+  if (!isSetup) {
+    return (
+      <SetupScreen
+        onDone={(ledgerId) => {
+          setActiveLedgerId(ledgerId)
+          setIsSetup(true)
+        }}
+      />
+    )
+  }
+
   return (
     <>
       <div className="screen-area">
-        {tab === 'transactions' && <MainScreen ledgerId={activeLedgerId} showAdd={showAdd} onCloseAdd={() => setShowAdd(false)} />}
+        {tab === 'transactions' && (
+          <MainScreen
+            ledgerId={activeLedgerId}
+            showAdd={showAdd}
+            onCloseAdd={() => setShowAdd(false)}
+            onSignOut={() => supabase.auth.signOut()}
+          />
+        )}
         {tab === 'ledgers' && (
           <LedgersScreen
             activeLedgerId={activeLedgerId}

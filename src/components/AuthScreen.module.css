@@ -1,0 +1,57 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 32px 24px;
+  gap: 56px;
+  padding-top: calc(var(--safe-top) + 32px);
+}
+
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.logoIcon {
+  font-size: 56px;
+  line-height: 1;
+}
+
+.appName {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.tagline {
+  font-size: 15px;
+  color: var(--text-muted);
+}
+
+.actions {
+  width: 100%;
+}
+
+.googleBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #fff;
+  color: #1a1a2e;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  letter-spacing: 0.1px;
+}
+
+.googleBtn:active {
+  opacity: 0.85;
+}
