@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getAllLedgers, getSetting, setSetting } from './db'
+import { getAllLedgers, getSetting, setSetting, refreshCache } from './db'
 import { supabase } from './supabase'
 import AuthScreen from './components/AuthScreen'
 import SetupScreen from './components/SetupScreen'
@@ -38,6 +38,7 @@ export default function App() {
       setActiveLedgerId(valid ? savedId : ledgers[0].id)
       setIsSetup(true)
       setReady(true)
+      refreshCache() // populate offline cache in background
     }
     init()
   }, [session])

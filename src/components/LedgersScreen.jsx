@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
-import { getAllLedgers, getLedgerCurrentBalance } from '../db'
+import { getAllLedgers, getAllLedgersWithBalances } from '../db'
 import { formatCurrency } from '../utils'
 import LedgerSheet from './LedgerSheet'
+import NetworkDot from './NetworkDot'
 import styles from './LedgersScreen.module.css'
 
 const LONG_PRESS_MS = 500
@@ -15,13 +16,9 @@ export default function LedgersScreen({ activeLedgerId, onSelect, onActiveLedger
 
   async function load() {
     setLoading(true)
-    const all = await getAllLedgers()
+    const all = await getAllLedgersWithBalances()
     setLedgers(all)
-    const bals = {}
-    await Promise.all(all.map(async (l) => {
-      bals[l.id] = await getLedgerCurrentBalance(l.id)
-    }))
-    setBalances(bals)
+    setBalances(Object.fromEntries(all.map((l) => [l.id, l.balance])))
     setLoading(false)
   }
 
@@ -48,13 +45,16 @@ export default function LedgersScreen({ activeLedgerId, onSelect, onActiveLedger
     <div className={styles.screen}>
       <header className={styles.header}>
         <span className={styles.appName}>Daybook</span>
-        <button className={styles.newBtn} onClick={() => setSheetLedger(null)}>
+        <div className={styles.headerRight}>
+          <NetworkDot />
+          <button className={styles.newBtn} onClick={() => setSheetLedger(null)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           New
         </button>
+        </div>
       </header>
 
       <div className={styles.listArea}>

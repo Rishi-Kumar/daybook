@@ -24,6 +24,12 @@
   color: var(--accent);
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .newBtn {
   display: flex;
   align-items: center;

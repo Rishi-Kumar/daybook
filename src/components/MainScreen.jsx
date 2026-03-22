@@ -1,15 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import {
-  getTransactionsForDate,
-  getAllDatesWithTransactions,
-  getOpeningBalancesForDates,
-  getLedger,
-  calcClosing,
-} from '../db'
+import { getTransactionGroupsForRange, getLedger } from '../db'
 import { today, toDateStr, formatDateLong, formatCurrency, formatMonthEnd } from '../utils'
 import TransactionList from './TransactionList'
 import AddTransaction from './AddTransaction'
 import EmailSheet from './EmailSheet'
+import NetworkDot from './NetworkDot'
 import styles from './MainScreen.module.css'
 
 function nDaysAgo(n) {
@@ -26,6 +21,7 @@ export default function MainScreen({ ledgerId, showAdd, onCloseAdd, onSignOut })
   const [loading, setLoading] = useState(true)
   const [editingTx, setEditingTx] = useState(null)
   const [showEmail, setShowEmail] = useState(false)
+  const [confirmSignOut, setConfirmSignOut] = useState(false)
 
   const bottomRef = useRef(null)
   const shouldScrollRef = useRef(true)
@@ -39,20 +35,8 @@ export default function MainScreen({ ledgerId, showAdd, onCloseAdd, onSignOut })
   const load = useCallback(async (scrollBottom = false) => {
     if (!ledgerId) return
     setLoading(true)
-    const allDates = await getAllDatesWithTransactions(ledgerId)
-    const inRange = allDates.filter((d) => d >= fromDate && d <= toDate)
-    const [allTransactions, openings] = await Promise.all([
-      Promise.all(inRange.map((date) => getTransactionsForDate(date, ledgerId))),
-      getOpeningBalancesForDates(inRange, ledgerId),
-    ])
-    const loaded = inRange
-      .map((date, i) => {
-        const transactions = allTransactions[i]
-        const opening = openings.get(date)
-        return { date, transactions, opening, closing: calcClosing(opening, transactions) }
-      })
-      .sort((a, b) => (a.date > b.date ? 1 : -1))
-    setGroups(loaded)
+    const groups = await getTransactionGroupsForRange(fromDate, toDate, ledgerId)
+    setGroups(groups)
     setLoading(false)
     if (scrollBottom) shouldScrollRef.current = true
   }, [ledgerId, fromDate, toDate])
@@ -74,26 +58,39 @@ export default function MainScreen({ ledgerId, showAdd, onCloseAdd, onSignOut })
             <span className={styles.appName}>Daybook</span>
             {ledgerName && <span className={styles.ledgerName}>{ledgerName}</span>}
           </div>
-          {onSignOut && (
-            <button className={styles.signOutBtn} onClick={onSignOut} aria-label="Sign out">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </button>
-          )}
-          <button
-            className={styles.emailBtn}
-            onClick={() => setShowEmail(true)}
-            aria-label="Email report"
-            disabled={loading}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"/>
-              <polyline points="2,4 12,13 22,4"/>
-            </svg>
-          </button>
+          <div className={styles.headerActions}>
+            <NetworkDot />
+            {confirmSignOut ? (
+              <>
+                <span className={styles.signOutPrompt}>Sign out?</span>
+                <button className={styles.signOutCancel} onClick={() => setConfirmSignOut(false)}>Cancel</button>
+                <button className={styles.signOutConfirm} onClick={onSignOut}>Yes</button>
+              </>
+            ) : (
+              <>
+                <button
+                  className={styles.iconBtn}
+                  onClick={() => setShowEmail(true)}
+                  aria-label="Email report"
+                  disabled={loading}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <polyline points="2,4 12,13 22,4"/>
+                  </svg>
+                </button>
+                {onSignOut && (
+                  <button className={styles.iconBtn} onClick={() => setConfirmSignOut(true)} aria-label="Sign out">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                      <polyline points="16 17 21 12 16 7"/>
+                      <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
         <div className={styles.rangePicker}>
           <div className={styles.dateField}>
