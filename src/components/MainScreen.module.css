@@ -29,6 +29,12 @@
   gap: 2px;
 }
 
+.appNameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .appName {
   font-size: 13px;
   font-weight: 700;

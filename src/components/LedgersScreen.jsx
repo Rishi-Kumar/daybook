@@ -9,16 +9,13 @@ const LONG_PRESS_MS = 500
 
 export default function LedgersScreen({ activeLedgerId, onSelect, onActiveLedgerDeleted }) {
   const [ledgers, setLedgers] = useState([])
-  const [balances, setBalances] = useState({})
   const [loading, setLoading] = useState(true)
   const [sheetLedger, setSheetLedger] = useState(undefined) // undefined = closed, null = create, ledger obj = edit
   const longPressTimer = useRef(null)
 
   async function load() {
     setLoading(true)
-    const all = await getAllLedgersWithBalances()
-    setLedgers(all)
-    setBalances(Object.fromEntries(all.map((l) => [l.id, l.balance])))
+    setLedgers(await getAllLedgersWithBalances())
     setLoading(false)
   }
 
@@ -44,17 +41,17 @@ export default function LedgersScreen({ activeLedgerId, onSelect, onActiveLedger
   return (
     <div className={styles.screen}>
       <header className={styles.header}>
-        <span className={styles.appName}>Daybook</span>
-        <div className={styles.headerRight}>
+        <div className={styles.appNameRow}>
+          <span className={styles.appName}>Daybook</span>
           <NetworkDot />
-          <button className={styles.newBtn} onClick={() => setSheetLedger(null)}>
+        </div>
+        <button className={styles.newBtn} onClick={() => setSheetLedger(null)}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           New
         </button>
-        </div>
       </header>
 
       <div className={styles.listArea}>
@@ -83,8 +80,8 @@ export default function LedgersScreen({ activeLedgerId, onSelect, onActiveLedger
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </div>
-            <div className={`${styles.cardBalance} ${(balances[ledger.id] ?? 0) < 0 ? styles.negative : ''}`}>
-              {balances[ledger.id] !== undefined ? formatCurrency(balances[ledger.id]) : '—'}
+            <div className={`${styles.cardBalance} ${(ledger.balance ?? 0) < 0 ? styles.negative : ''}`}>
+              {ledger.balance !== undefined ? formatCurrency(ledger.balance) : '—'}
             </div>
           </div>
         ))}

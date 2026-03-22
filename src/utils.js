@@ -44,6 +44,12 @@ export function formatMonthEnd(dateStr) {
   return `End of ${month} ${y}`
 }
 
+// Credits before debits, then by creation time.
+export function compareTx(a, b) {
+  if (a.type !== b.type) return a.type === 'credit' ? -1 : 1
+  return a.createdAt - b.createdAt
+}
+
 // Pure helper: given flat arrays of ledgers and transactions (already sorted),
 // builds the { name, groups } structure used by the PDF report generator.
 // Used by both db.js (client) and api/send-report.js (server).
@@ -58,12 +64,8 @@ export function buildLedgerGroups(ledgers, transactions) {
     for (const tx of ledgerTxs) {
       ;(byDate[tx.date] ??= []).push(tx)
     }
-    // Sort transactions within each day: credits first, then by createdAt
     for (const date of Object.keys(byDate)) {
-      byDate[date].sort((a, b) => {
-        if (a.type !== b.type) return a.type === 'credit' ? -1 : 1
-        return a.createdAt - b.createdAt
-      })
+      byDate[date].sort(compareTx)
     }
 
     const allDataDates = Object.keys(byDate).sort()

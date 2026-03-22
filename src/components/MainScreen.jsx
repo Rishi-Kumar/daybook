@@ -55,11 +55,13 @@ export default function MainScreen({ ledgerId, showAdd, onCloseAdd, onSignOut })
       <header className={styles.header}>
         <div className={styles.headerTop}>
           <div className={styles.headerLeft}>
-            <span className={styles.appName}>Daybook</span>
+            <div className={styles.appNameRow}>
+              <span className={styles.appName}>Daybook</span>
+              <NetworkDot />
+            </div>
             {ledgerName && <span className={styles.ledgerName}>{ledgerName}</span>}
           </div>
           <div className={styles.headerActions}>
-            <NetworkDot />
             {confirmSignOut ? (
               <>
                 <span className={styles.signOutPrompt}>Sign out?</span>

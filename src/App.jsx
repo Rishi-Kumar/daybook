@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getAllLedgers, getSetting, setSetting, refreshCache } from './db'
+import { getSetting, setSetting, refreshCache } from './db'
+import { getCache } from './cache'
 import { supabase } from './supabase'
 import AuthScreen from './components/AuthScreen'
 import SetupScreen from './components/SetupScreen'
@@ -27,7 +28,7 @@ export default function App() {
   useEffect(() => {
     if (!session) return
     async function init() {
-      const ledgers = await getAllLedgers()
+      const ledgers = (await refreshCache()) ?? getCache()?.ledgers ?? []
       if (ledgers.length === 0) {
         setIsSetup(false)
         setReady(true)
@@ -38,7 +39,6 @@ export default function App() {
       setActiveLedgerId(valid ? savedId : ledgers[0].id)
       setIsSetup(true)
       setReady(true)
-      refreshCache() // populate offline cache in background
     }
     init()
   }, [session])

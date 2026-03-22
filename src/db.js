@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import { buildLedgerGroups } from './utils'
+import { buildLedgerGroups, compareTx } from './utils'
 import {
   getCache, setCache, patchCache, getQueue, enqueue, clearQueue,
   getLocalSetting, setLocalSetting,
@@ -67,9 +67,7 @@ function groupsFromCache(fromDate, toDate, ledgerId) {
   if (!ledger) return []
 
   const ledgerTxs = cache.transactions.filter((t) => t.ledgerId === ledgerId)
-  const openingBalance = ledgerTxs
-    .filter((t) => t.date < fromDate)
-    .reduce((bal, t) => bal + t.amount, ledger.openingBalance)
+  const openingBalance = calcClosing(ledger.openingBalance, ledgerTxs.filter((t) => t.date < fromDate))
 
   const byDate = {}
   for (const tx of ledgerTxs.filter((t) => t.date >= fromDate && t.date <= toDate)) {
@@ -78,10 +76,7 @@ function groupsFromCache(fromDate, toDate, ledgerId) {
 
   let balance = openingBalance
   return Object.keys(byDate).sort().map((date) => {
-    const transactions = byDate[date].sort((a, b) => {
-      if (a.type !== b.type) return a.type === 'credit' ? -1 : 1
-      return a.createdAt - b.createdAt
-    })
+    const transactions = byDate[date].sort(compareTx)
     const group = { date, transactions, opening: balance, closing: calcClosing(balance, transactions) }
     balance = group.closing
     return group
@@ -100,14 +95,17 @@ function ledgersWithBalancesFromCache() {
 
 // ── Cache refresh ──────────────────────────────────────────────────────────────
 
+// Returns ledger array on success, null if offline or error.
 export async function refreshCache() {
-  if (!navigator.onLine) return
-  const [ledgers, txResult] = await Promise.all([
-    getAllLedgers(),
+  if (!navigator.onLine) return null
+  const [ledgerResult, txResult] = await Promise.all([
+    supabase.from('ledgers').select('*').order('created_at', { ascending: true }),
     supabase.from('transactions').select('*'),
   ])
-  if (txResult.error) return
+  if (ledgerResult.error || txResult.error) return null
+  const ledgers = (ledgerResult.data ?? []).map(ledgerFromRow)
   setCache(ledgers, (txResult.data ?? []).map(txFromRow))
+  return ledgers
 }
 
 // ── Queue flush (runs on reconnect) ───────────────────────────────────────────
@@ -161,6 +159,7 @@ async function flushQueue() {
 }
 
 if (typeof window !== 'undefined') {
+  window.removeEventListener('online', flushQueue)
   window.addEventListener('online', flushQueue)
 }
 
@@ -330,10 +329,7 @@ export async function getTransactionsForDate(date, ledgerId) {
   if (!navigator.onLine) {
     return (getCache()?.transactions ?? [])
       .filter((t) => t.ledgerId === ledgerId && t.date === date)
-      .sort((a, b) => {
-        if (a.type !== b.type) return a.type === 'credit' ? -1 : 1
-        return a.createdAt - b.createdAt
-      })
+      .sort(compareTx)
   }
   const { data, error } = await supabase
     .from('transactions')
@@ -341,10 +337,7 @@ export async function getTransactionsForDate(date, ledgerId) {
     .eq('ledger_id', ledgerId)
     .eq('date', date)
   if (error) throw error
-  return (data ?? []).map(txFromRow).sort((a, b) => {
-    if (a.type !== b.type) return a.type === 'credit' ? -1 : 1
-    return a.createdAt - b.createdAt
-  })
+  return (data ?? []).map(txFromRow).sort(compareTx)
 }
 
 export async function getAllDatesWithTransactions(ledgerId) {
@@ -405,7 +398,7 @@ export async function getOpeningBalancesForDates(dates, ledgerId) {
     const result = new Map()
     for (const date of dates) {
       const prior = (cache?.transactions ?? []).filter((t) => t.ledgerId === ledgerId && t.date < date)
-      result.set(date, prior.reduce((bal, t) => bal + t.amount, initialBalance))
+      result.set(date, calcClosing(initialBalance, prior))
     }
     return result
   }
@@ -470,10 +463,7 @@ export async function getTransactionGroupsForRange(fromDate, toDate, ledgerId) {
 
   let balance = openingBalance
   return Object.keys(byDate).sort().map((date) => {
-    const transactions = byDate[date].sort((a, b) => {
-      if (a.type !== b.type) return a.type === 'credit' ? -1 : 1
-      return a.createdAt - b.createdAt
-    })
+    const transactions = byDate[date].sort(compareTx)
     const group = { date, transactions, opening: balance, closing: calcClosing(balance, transactions) }
     balance = group.closing
     return group
