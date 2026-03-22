@@ -1,5 +1,22 @@
 import { test, expect } from '@playwright/test'
-import { createLedgerAndGoToMain } from './helpers.js'
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+async function createLedgerAndGoToMain(page, { name = 'Cash', balance = '1000' } = {}) {
+  await page.goto('/')
+  await page.getByPlaceholder('Cash').fill(name)
+  await page.getByPlaceholder('0.00').fill(balance)
+  await page.getByRole('button', { name: 'Get Started' }).click()
+  await page.waitForSelector('text=Transactions')
+}
+
+async function addTransaction(page, { particulars, amount, debit = false } = {}) {
+  await page.getByLabel('Add transaction').click()
+  if (debit) await page.getByRole('button', { name: '+' }).click()
+  await page.getByPlaceholder('What is this for?').fill(particulars)
+  await page.getByPlaceholder('0.00').fill(amount)
+  await page.getByRole('button', { name: 'Save' }).click()
+}
 
 // ── CUJ 1: First-time setup ─────────────────────────────────────────────────
 
@@ -19,11 +36,7 @@ test('CUJ 1: first-time setup creates ledger and shows main screen', async ({ pa
 
 test('CUJ 2: add credit transaction appears in list and increases closing balance', async ({ page }) => {
   await createLedgerAndGoToMain(page, { balance: '1000' })
-
-  await page.getByLabel('Add transaction').click()
-  await page.getByPlaceholder('What is this for?').fill('Sales income')
-  await page.getByPlaceholder('0.00').fill('500')
-  await page.getByRole('button', { name: 'Save' }).click()
+  await addTransaction(page, { particulars: 'Sales income', amount: '500' })
 
   await expect(page.getByText('Sales income')).toBeVisible()
   await expect(page.getByText('1,500.00')).toBeVisible() // closing balance
@@ -33,12 +46,7 @@ test('CUJ 2: add credit transaction appears in list and increases closing balanc
 
 test('CUJ 3: add debit transaction appears in list and decreases closing balance', async ({ page }) => {
   await createLedgerAndGoToMain(page, { balance: '1000' })
-
-  await page.getByLabel('Add transaction').click()
-  await page.getByRole('button', { name: '+' }).click() // toggle to −
-  await page.getByPlaceholder('What is this for?').fill('Rent')
-  await page.getByPlaceholder('0.00').fill('300')
-  await page.getByRole('button', { name: 'Save' }).click()
+  await addTransaction(page, { particulars: 'Rent', amount: '300', debit: true })
 
   await expect(page.getByText('Rent')).toBeVisible()
   await expect(page.getByText('700.00')).toBeVisible() // closing balance
@@ -48,12 +56,7 @@ test('CUJ 3: add debit transaction appears in list and decreases closing balance
 
 test('CUJ 4: editing a transaction recalculates the closing balance', async ({ page }) => {
   await createLedgerAndGoToMain(page, { balance: '1000' })
-
-  // Add a transaction
-  await page.getByLabel('Add transaction').click()
-  await page.getByPlaceholder('What is this for?').fill('Old entry')
-  await page.getByPlaceholder('0.00').fill('200')
-  await page.getByRole('button', { name: 'Save' }).click()
+  await addTransaction(page, { particulars: 'Old entry', amount: '200' })
   await expect(page.getByText('Old entry')).toBeVisible()
 
   // Right-click to edit
@@ -69,12 +72,7 @@ test('CUJ 4: editing a transaction recalculates the closing balance', async ({ p
 
 test('CUJ 5: deleting a transaction removes it from the list', async ({ page }) => {
   await createLedgerAndGoToMain(page, { balance: '1000' })
-
-  // Add a transaction
-  await page.getByLabel('Add transaction').click()
-  await page.getByPlaceholder('What is this for?').fill('To delete')
-  await page.getByPlaceholder('0.00').fill('400')
-  await page.getByRole('button', { name: 'Save' }).click()
+  await addTransaction(page, { particulars: 'To delete', amount: '400' })
   await expect(page.getByText('To delete')).toBeVisible()
 
   // Right-click → delete
@@ -104,11 +102,8 @@ test('CUJ 6: switching between Transactions and Ledgers tabs works', async ({ pa
 test('CUJ 7: email report sheet sends and shows success state', async ({ page }) => {
   await createLedgerAndGoToMain(page, { balance: '1000' })
 
-  // Add a transaction so the email button is enabled
-  await page.getByLabel('Add transaction').click()
-  await page.getByPlaceholder('What is this for?').fill('Sale')
-  await page.getByPlaceholder('0.00').fill('100')
-  await page.getByRole('button', { name: 'Save' }).click()
+  // Add a transaction — EmailSheet requires at least one to avoid "No transactions found" error
+  await addTransaction(page, { particulars: 'Sale', amount: '100' })
 
   // Intercept the API — no real SMTP needed
   await page.route('/api/send-report', (route) =>
